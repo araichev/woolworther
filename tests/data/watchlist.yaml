@@ -1,0 +1,9 @@
+name: test
+email_addresses:
+  - brainbummer@mailinator.com
+  - rhymedude@mailinator.com
+products: |
+  description,stock_code
+  organic cheese,281739
+  GB chocolate,260803
+  fake,fake_stock_code
