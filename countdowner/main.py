@@ -3,8 +3,8 @@ from collections import OrderedDict
 from pathlib import Path
 import os
 import json
-import io 
-import re 
+import io
+import re
 
 import yaml
 import requests
@@ -25,11 +25,11 @@ EMAIL_PATTERN = re.compile(r'[^@]+@[^@]+\.[^@]+')
 
 #---------------------
 # Watchlist functions
-#--------------------- 
+#---------------------
 def parse_df(csv_text, **kwargs):
     """
     Given a CSV text with a header, convert it to a data frame and
-    return the result. 
+    return the result.
     """
     csv = io.StringIO(csv_text)
     return pd.read_table(csv, sep=',', **kwargs)
@@ -41,8 +41,8 @@ def parse_watchlist(watchlist_yaml):
     dictionary.
     If keys are missing from the dictionary, add them and set their values
     to ``None`` to aid format checking in :func:`check_fare_structure`.
-    If the YAML dict comes from a file located at the path 
-    ``yaml_path``, then use that path to fill in the fare structure name 
+    If the YAML dict comes from a file located at the path
+    ``yaml_path``, then use that path to fill in the fare structure name
     (if missing) and make absolute the fare structure zones path (if given).
     """
     w = {}
@@ -56,7 +56,7 @@ def parse_watchlist(watchlist_yaml):
 
     if w['products'] is not None:
         w['products'] = parse_df(w['products'], dtype={'stock_code': str})
-    
+
     return w
 
 def valid_email(x):
@@ -84,7 +84,7 @@ def check_watchlist(watchlist):
         raise ValueError('Products must be given')
     if not set(['description', 'stock_code']) <= set(p.columns):
         raise ValueError('Products must have "description" and "stock_code" fields')
-   
+
 def read_watchlist(path):
     """
     Read a YAML file of watchlist data at the given path, parse the file,
@@ -132,7 +132,7 @@ def price_to_float(price_string):
     Convert a price string to a float.
     """
     return float(price_string.replace('$', ''))
-              
+
 def parse_product(html):
     """
     Given a response from the Countdown API, parse it, and return in as a dictionary with the keys and values:
@@ -149,9 +149,9 @@ def parse_product(html):
     """
     # Parse response
     d = OrderedDict()
-    
+
     soup = BeautifulSoup(html, 'lxml')
-    
+
     d['stock_code'] = soup.find('input', id='stockcode')['value']
     d['name'] = soup.find('div', class_='product-title').h1.text.strip()
     d['description']= soup.find('p', class_='product-description-text').text.strip() or None
@@ -172,15 +172,15 @@ def parse_product(html):
         d['price'] = price_to_float(list(t.stripped_strings)[0].replace('non club price', ''))
     elif s3:
         d['on_sale'] = False
-        d['sale_price'] = None    
+        d['sale_price'] = None
         d['price'] = price_to_float(list(s3.stripped_strings)[0])
 
     if d['on_sale']:
         d['discount_percentage'] = 100*(1 - d['sale_price']/d['price'])
     else:
-        d['discount_percentage'] = None 
+        d['discount_percentage'] = None
 
-    d['unit_price'] = soup.find('div', class_='cup-price').string.strip() or None        
+    d['unit_price'] = soup.find('div', class_='cup-price').string.strip() or None
     d['datetime'] = dt.datetime.now().strftime('%Y-%m-%dT%H:%M:%S')
 
     return d
@@ -199,12 +199,12 @@ def collect_products(stock_codes, as_df=True):
         except:
             # Skip failures
             continue
-        
+
     if as_df:
         results = pd.DataFrame(results)
         if not results.empty:
             results['datetime'] = pd.to_datetime(results['datetime'])
-        
+
     return results
 
 MAX_CONNECTIONS_PER_HOST = 100
@@ -219,8 +219,8 @@ async def get_product_a(stock_code):
          response = await session.get(url, params={'stockcode': stock_code})
          content = await response.text()
          return response, content
-        
-async def collect_products_a_base(stock_codes, as_df):    
+
+async def collect_products_a_base(stock_codes, as_df):
     """
     Asynchronous version of :func:`collect_products`.
     Must be called with ``curio.run(collect_products_a(*))``.
@@ -235,11 +235,11 @@ async def collect_products_a_base(stock_codes, as_df):
         response, content = await task.join()
         if response.status_code == 200:
             results.append(parse_product(content))
-    
+
     if as_df:
         results = pd.DataFrame(results)
         results['datetime'] = pd.to_datetime(results['datetime'])
-    
+
     return results.sort_values('name')
 
 def collect_products_a(stock_codes, as_df=True):
@@ -262,7 +262,7 @@ def filter_sales(products):
 
 def get_secret(key, secrets_path=ROOT/'secrets.json'):
     """
-    Open the JSON file at ``secrets_path``, and return the value corresponding to the given key. 
+    Open the JSON file at ``secrets_path``, and return the value corresponding to the given key.
     """
     secrets_path = Path(secrets_path)
     with secrets_path.open() as src:
@@ -289,32 +289,41 @@ def email(products, email_address, mailgun_domain, mailgun_key, as_html=True):
 
     return requests.post(url, auth=auth, data=data)
 
-def run_pipeline(watchlist_path, out_dir, mailgun_domain=None, 
+def run_pipeline(watchlist_path, out_path=None, mailgun_domain=None,
   mailgun_key=None, as_html=True):
     """
-    Read a YAML watchlist located at ``watchlist_path`` (string or Path object), one that :func:`read_watchlist` can read, collect all the product information from Countdown, and write the result to a CSV located in the directory ``out_dir`` (string or Path object), creating the directory if it does not exist.
-    If ``mailgun_domain`` (string) and ``mailgun_key`` are given, then email the products that are on sale (if there are any) using :func:`email`.
+    Read a YAML watchlist located at ``watchlist_path``
+    (string or Path object), one that :func:`read_watchlist` can read,
+    collect all the product information from Countdown, and return
+    the resulting DataFrame.
+    If an output path (string or Path object) is given,
+    then instead save the result to a CSV at that path.
+    If ``mailgun_domain`` (string) and ``mailgun_key`` are given,
+    then email the products that are on sale (if there are any)
+    using :func:`email`.
     """
     # Read products
     watchlist_path = Path(watchlist_path)
     w = read_watchlist(watchlist_path)
-    
-    # Collect updates
+
+    # Collect product info
     codes = w['products']['stock_code']
     f = collect_products_a(codes)
-    
-    # Write product updates
-    out_dir = Path(out_dir)
-    if not out_dir.exists():
-        out_dir.mkdir(parents=True)
 
-    t = dt.datetime.now()
-    path = out_dir/'{!s}_prices_{:%Y-%m-%dT%H:%M}'.format(w['name'], t)
-    f.to_csv(str(path), index=False)
-    
     # Filter sale items
     g = filter_sales(f)
     if not g.empty and mailgun_domain is not None and mailgun_key is not None:
         # Email
-        email(g, w['email_address'], mailgun_domain, mailgun_key, 
+        email(g, w['email_address'], mailgun_domain, mailgun_key,
           as_html=as_html)
+
+    # Output product info
+    if out_path is None:
+        return f
+    else:
+        if not out_path.parent.exists():
+            out_path.parent.mkdir(parents=True)
+
+        f.to_csv(str(path), index=False)
+
+
