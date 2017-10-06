@@ -24,7 +24,7 @@ def test_countdownit():
       status=200, body='junk', content_type='application/json')
 
     w_path = DATA_DIR/'watchlist.yaml'
-    with tempfile.TemporaryDirectory() as tmp:
+    with tempfile.NamedTemporaryFile() as tmp:
         result = runner.invoke(countdownit,
-          [str(w_path), tmp, '-d', domain, '-k', 'api'])
+          [str(w_path), '-o', tmp.name, '-d', domain, '-k', 'api'])
         assert result.exit_code == 0

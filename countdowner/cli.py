@@ -4,6 +4,8 @@ import countdowner.main as m
 
 
 @click.command(short_help='Get the current prices of your watchlist products')
+@click.option('-o', '--out_path', default=None,
+  help='CSV output path')
 @click.option('-d', '--mailgun_domain', default=None,
   help='Mailgun domain key')
 @click.option('-k', '--mailgun_key', default=None,
@@ -14,9 +16,8 @@ import countdowner.main as m
 @click.option('-a', '--async', is_flag=True, default=True,
   help='Collect the product prices asynchronously; defaults to True')
 @click.argument('watchlist_path')
-@click.argument('out_dir')
-def countdownit(watchlist_path, out_dir, mailgun_domain=None, mailgun_key=None,
-  as_html=True, async=True):
+def countdownit(watchlist_path, out_path, mailgun_domain=None,
+  mailgun_key=None, as_html=True, async=True):
     """
     Read a YAML watchlist located at ``--watchlist_path``,
     collect all the product information from Countdown, and
@@ -26,5 +27,5 @@ def countdownit(watchlist_path, out_dir, mailgun_domain=None, mailgun_key=None,
     are given, then email the products on sale (if there are any)
     to the email address listed in the watchlist.
     """
-    m.run_pipeline(watchlist_path, out_dir, mailgun_domain, mailgun_key,
+    m.run_pipeline(watchlist_path, out_path, mailgun_domain, mailgun_key,
       as_html=as_html, async=async)

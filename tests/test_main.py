@@ -100,13 +100,20 @@ def test_run_pipeline():
       status=200, body='junk', content_type='application/json')
 
     w_path = DATA_DIR/'watchlist.yaml'
-    with tempfile.TemporaryDirectory() as tmp:
-        run_pipeline(w_path, tmp, domain, 'api_key')
-        # Should write a file
-        file_list = list(Path(tmp).iterdir())
-        assert len(file_list) == 1
+    # Test without writing to file
+    f = run_pipeline(w_path, None, domain, 'api_key')
+    # Should be a DataFrame
+    assert isinstance(f, pd.DataFrame)
+    # File should contain all the products in the watchlist
+    w = read_watchlist(w_path)
+    assert set(w['products']['stock_code'].values) ==\
+      set(f['stock_code'].values)
+
+    # Test with writing to file
+    with tempfile.NamedTemporaryFile() as tmp:
+        run_pipeline(w_path, tmp.name, domain, 'api_key')
         # File should be a CSV
-        f = pd.read_csv(file_list[0])
+        f = pd.read_csv(tmp)
         assert isinstance(f, pd.DataFrame)
         # File should contain all the products in the watchlist
         w = read_watchlist(w_path)

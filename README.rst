@@ -51,6 +51,11 @@ Notes
 History
 ========
 
+0.3.0, 2017-10-06
+-------------------
+- Changed ``run_pipeline`` API
+
+
 0.2.0, 2017-06-18
 -------------------
 - Allowed for multiple email addresses in watchlist

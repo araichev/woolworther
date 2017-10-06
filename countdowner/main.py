@@ -287,14 +287,16 @@ def email(products, email_addresses, mailgun_domain, mailgun_key, as_html=True):
 
     return requests.post(url, auth=auth, data=data)
 
-def run_pipeline(watchlist_path, out_dir, mailgun_domain=None,
+def run_pipeline(watchlist_path, out_path=None, mailgun_domain=None,
   mailgun_key=None, as_html=True, async=True):
     """
     Read a YAML watchlist located at ``watchlist_path``
     (string or Path object), one that :func:`read_watchlist` can read,
     collect all the product information from Countdown
-    (asynchronously if ``async``), and write the result to a CSV
-    located in the directory ``out_dir`` (string or Path object),
+    (asynchronously if ``async``), and return the resulting DataFrame.
+    If an output path is given (string or Path object), then
+    instead write the result to a CSV
+    located in the directory ``out_dir`` ,
     creating the directory if it does not exist.
     If ``mailgun_domain`` (string) and ``mailgun_key`` are given,
     then send an email with the possibly empty list of products
@@ -308,17 +310,18 @@ def run_pipeline(watchlist_path, out_dir, mailgun_domain=None,
     codes = w['products']['stock_code']
     f = collect_products(codes, async)
 
-    # Write product updates
-    out_dir = Path(out_dir)
-    if not out_dir.exists():
-        out_dir.mkdir(parents=True)
-
-    t = dt.datetime.now()
-    path = out_dir/'{!s}_prices_{:%Y-%m-%dT%H:%M}'.format(w['name'], t)
-    f.to_csv(str(path), index=False)
-
-    # Filter sale items
+    # Filter sale items and email
     g = filter_sales(f)
     if mailgun_domain is not None and mailgun_key is not None:
         email(g, w['email_addresses'], mailgun_domain, mailgun_key,
           as_html=as_html)
+
+    # Output product updates
+    if out_path is None:
+        return f
+    else:
+        out_path = Path(out_path)
+        if not out_path.parent.exists():
+            out_path.parent.mkdir(parents=True)
+
+        f.to_csv(str(out_path), index=False)
