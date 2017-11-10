@@ -20,6 +20,8 @@ WATCHLIST_FIELDS = [
   'products',
 ]
 EMAIL_PATTERN = re.compile(r'[^@]+@[^@]+\.[^@]+')
+PRICE_PATTERN = re.compile(r'\d+\.\d\d')
+
 
 # ---------------------
 # Watchlist functions
@@ -137,7 +139,7 @@ def price_to_float(price_string):
     """
     Convert a price string to a float.
     """
-    return float(price_string.replace('$', ''))
+    return float(re.search(PRICE_PATTERN, price_string).group(0))
 
 def parse_product(response):
     """
@@ -181,7 +183,7 @@ def parse_product(response):
 
     soup = BeautifulSoup(response.text, 'lxml')
 
-    if not soup.find('input', id='stockcode'):
+    if not soup.find('input', attrs={'name': 'stockcode'}):
         return d
 
     # Handle good product data
