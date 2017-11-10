@@ -51,6 +51,11 @@ Notes
 History
 ========
 
+0.3.1, 2017-11-10
+-------------------
+- Adapted ``parse_product`` function to Countdown's new HTML page format
+
+
 0.3.0, 2017-10-06
 -------------------
 - Changed ``run_pipeline`` API
