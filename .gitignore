@@ -1,4 +1,4 @@
-secrets.json
+.env
 output
 ipynb/prototyping.ipynb
 

@@ -252,17 +252,8 @@ def filter_sales(products):
     columns ``['name', 'sale_price', 'price', 'discount']``.
     """
     cols = ['name', 'sale_price', 'price', 'discount_percentage']
-    return products.loc[products['sale_price'].notnull(), cols].copy()
-
-def get_secret(key, secrets_path=ROOT/'secrets.json'):
-    """
-    Open the JSON file at ``secrets_path``, and return the value
-    corresponding to the given key.
-    """
-    secrets_path = Path(secrets_path)
-    with secrets_path.open() as src:
-        secrets = json.load(src)
-    return secrets[key]
+    return products.loc[products['sale_price'].notnull(), cols].sort_values(
+      'discount_percentage', ascending=False)
 
 def email(products, email_addresses, mailgun_domain, mailgun_key, as_html=True):
     """
@@ -297,9 +288,7 @@ def run_pipeline(watchlist_path, out_path=None, mailgun_domain=None,
     collect all the product information from Countdown
     (asynchronously if ``async``), and return the resulting DataFrame.
     If an output path is given (string or Path object), then
-    instead write the result to a CSV
-    located in the directory ``out_dir`` ,
-    creating the directory if it does not exist.
+    instead write the result to a CSV at that path.
     If ``mailgun_domain`` (string) and ``mailgun_key`` are given,
     then send an email with the possibly empty list of products
     on sale using :func:`email`.
@@ -313,8 +302,8 @@ def run_pipeline(watchlist_path, out_path=None, mailgun_domain=None,
     f = collect_products(codes, async)
 
     # Filter sale items and email
-    g = filter_sales(f)
     if mailgun_domain is not None and mailgun_key is not None:
+        g = filter_sales(f)
         email(g, w['email_addresses'], mailgun_domain, mailgun_key,
           as_html=as_html)
 
