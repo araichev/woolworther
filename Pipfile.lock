@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "96888d5b66d0f6abe61bcd9b6f640fa7bfe65b71e9e6c2705b8a4c25bcfd4fa6"
+            "sha256": "0f4bb568cd3f3614b39d6693b703a8bde7e6d50ddca409107014aa87afd21842"
         },
         "host-environment-markers": {
             "implementation_name": "cpython",
@@ -71,10 +71,6 @@
                 "sha256:d6b698788cae4cfa4e62ef8643a9ca332b79bd96cb314294b864ae8d7eb3ee8e"
             ],
             "version": "==2.2.1"
-        },
-        "countdowner": {
-            "editable": true,
-            "git": "git@github.com:araichev/countdowner.git@1857e2aba534017a78e24b33488c1b35ad35e34c"
         },
         "decorator": {
             "hashes": [
