@@ -9,7 +9,7 @@ Pretty rough, but gets the job done.
 
 Installation
 =============
-``pip install -U git+https://github.com/araichev/countdowner``
+``pipenv install -e git+https://github.com/araichev/countdowner#egg=countdowner``
 
 
 Usage
@@ -48,8 +48,14 @@ Notes
 - Will replace ``grequests`` with a faster asynchronous HTTP requester as soon as someone makes one for ``trio``
 
 
-History
+Changes
 ========
+
+0.3.2, 2017-11-20
+-------------------
+- Switched to pipenv
+- Sorted in function ``filter_sales``
+
 
 0.3.1, 2017-11-10
 -------------------
