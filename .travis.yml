@@ -7,8 +7,9 @@ python:
   - "3.6"
 # command to install dependencies
 install:
-  - pip install appdirs six pyparsing packaging
-  - pip install -r requirements.txt
+  - "pip install -e . --upgrade"
+  - "pipenv install"
 
 # command to run tests
-script: pytest
+script:
+  - "pipenv run pytest"
