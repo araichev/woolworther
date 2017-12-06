@@ -3,8 +3,8 @@ Countdowner
 .. image:: https://travis-ci.org/araichev/countdowner.svg?branch=master
     :target: https://travis-ci.org/araichev/countdowner
 
-A Python 3.4+ package to check for sales at Countdown grocery stores throughout New Zealand.
-Pretty rough, but gets the job done.
+A Python 3.4+ library to check for sales at Countdown grocery stores throughout New Zealand.
+Also has a command-line interface.
 
 
 Installation
@@ -51,15 +51,16 @@ Notes
 Changes
 ========
 
-0.3.2, 2017-11-20
+0.4.0, 2017-12-06
 -------------------
-- Switched to pipenv
-- Sorted in function ``filter_sales``
+- Updated ``parse_product`` to handle Countdown's new HTML output and rounded discount percentages to one decimal place
+- Added ``do_filter_sales`` flag to ``run_pipeline``
+- Changed ``countdownit`` to print to screen if no output path given
 
 
 0.3.1, 2017-11-10
 -------------------
-- Adapted ``parse_product`` function to Countdown's new HTML page format
+- Adapted ``parse_product`` function to Countdown's new HTML output
 
 
 0.3.0, 2017-10-06

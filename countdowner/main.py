@@ -153,6 +153,7 @@ def parse_product(response):
     - ``'size'``
     - ``'sale_price'``
     - ``'price'``
+    - ``'discount_percentage'``
     - ``'unit_price'``
     - ``'datetime'``: current datetime as a ``'%Y-%m-%dT%H:%M:%S'``
       string
@@ -188,8 +189,8 @@ def parse_product(response):
 
     # Handle good product data
     d['name'] = soup.find('div', class_='product-title').h1.text.strip()
-    d['description'] = soup.find('p', class_='product-description-text'
-      ).text.strip() or None
+    d['description'] = soup.find('p',
+      class_='product-description-text').text.strip() or None
     d['size'] = soup.find('span', class_='volume-size').text.strip() or None
 
     s1 = soup.find('span', class_='special-price')
@@ -202,14 +203,15 @@ def parse_product(response):
           'was', ''))
     elif s2:
         d['sale_price'] = price_to_float(list(s2.stripped_strings)[0])
-        t = soup.find('span', class_='grid-non-club-price')
+        t = soup.find('span', class_='non-club-price')
         d['price'] = price_to_float(list(t.stripped_strings)[0].replace(
           'non club price', ''))
     elif s3:
         d['price'] = price_to_float(list(s3.stripped_strings)[0])
 
     if d['sale_price'] is not None:
-        d['discount_percentage'] = 100*(1 - d['sale_price']/d['price'])
+        d['discount_percentage'] = round(
+          100*(1 - d['sale_price']/d['price']), 1)
     else:
         d['discount_percentage'] = None
 
@@ -236,7 +238,8 @@ def collect_products(stock_codes, async=True, as_df=True):
         results.append(info)
 
     if as_df:
-        results = pd.DataFrame(results)
+        results = pd.DataFrame(results).sort_values(
+          'discount_percentage', ascending=False)
         if not results.empty:
             results['datetime'] = pd.to_datetime(results['datetime'])
 
@@ -252,8 +255,7 @@ def filter_sales(products):
     columns ``['name', 'sale_price', 'price', 'discount']``.
     """
     cols = ['name', 'sale_price', 'price', 'discount_percentage']
-    return products.loc[products['sale_price'].notnull(), cols].sort_values(
-      'discount_percentage', ascending=False)
+    return products.loc[products['sale_price'].notnull(), cols]
 
 def email(products, email_addresses, mailgun_domain, mailgun_key, as_html=True):
     """
@@ -281,17 +283,21 @@ def email(products, email_addresses, mailgun_domain, mailgun_key, as_html=True):
     return requests.post(url, auth=auth, data=data)
 
 def run_pipeline(watchlist_path, out_path=None, mailgun_domain=None,
-  mailgun_key=None, as_html=True, async=True):
+  mailgun_key=None, as_html=True, async=True, do_filter_sales=False):
     """
     Read a YAML watchlist located at ``watchlist_path``
     (string or Path object), one that :func:`read_watchlist` can read,
     collect all the product information from Countdown
-    (asynchronously if ``async``), and return the resulting DataFrame.
+    (asynchronously if ``async``), and keep only the items on sale
+    if ``do_filter_sales``.
+
+    Return the resulting DataFrame.
     If an output path is given (string or Path object), then
     instead write the result to a CSV at that path.
+
     If ``mailgun_domain`` (string) and ``mailgun_key`` are given,
-    then send an email with the possibly empty list of products
-    on sale using :func:`email`.
+    then additionally send an email with the product information using
+    the function :func:`email`.
     """
     # Read products
     watchlist_path = Path(watchlist_path)
@@ -301,10 +307,12 @@ def run_pipeline(watchlist_path, out_path=None, mailgun_domain=None,
     codes = w['products']['stock_code']
     f = collect_products(codes, async)
 
+    if do_filter_sales:
+        f = filter_sales(f)
+
     # Filter sale items and email
     if mailgun_domain is not None and mailgun_key is not None:
-        g = filter_sales(f)
-        email(g, w['email_addresses'], mailgun_domain, mailgun_key,
+        email(f, w['email_addresses'], mailgun_domain, mailgun_key,
           as_html=as_html)
 
     # Output product updates
