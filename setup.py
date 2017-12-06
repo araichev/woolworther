@@ -9,10 +9,10 @@ with open('LICENSE.txt') as f:
 
 setup(
     name='countdowner',
-    version='0.3.2',
+    version='0.4.0',
     author='Alex Raichev',
     url='https://github.com/araichev/countdowner',
-    description='A Python 3.4+ package to check for sales at Countdown'
+    description='A Python 3.4+ library to check for sales at Countdown'
         'grocery stores throughout New Zealand',
     long_description=readme,
     license=license,
