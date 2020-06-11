@@ -51,6 +51,11 @@ Notes
 Changes
 ========
 
+2.0.0, 2020-06-11
+-----------------
+- Removed async feature for the time being, because the latest ``requests`` and ``grequests`` were conflicting.
+
+
 1.0.1, 2020-06-11
 -----------------
 - Bugfixed a null edge cases in ``collect_products()`` and ``filter_sales()``.

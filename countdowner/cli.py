@@ -13,13 +13,11 @@ import countdowner.main as m
 @click.option('-h', '--as_html', is_flag=True, default=True,
   help='Send the optional email as HTML if true;'
   'otherwise send it as text; defaults to True')
-@click.option('-a', '--use_async', is_flag=True, default=True,
-  help='Collect the product prices asynchronously; defaults to True')
 @click.option('-s', '--do_filter_sales', is_flag=True, default=False,
   help='Keep only the products on sale; defaults to False')
 @click.argument('watchlist_path')
 def countdownit(watchlist_path, out_path, mailgun_domain,
-  mailgun_key, as_html, use_async, do_filter_sales):
+  mailgun_key, as_html, do_filter_sales):
     """
     Read a YAML watchlist located at WATCHLIST_PATH,
     collect all the product information from Countdown,
@@ -34,7 +32,7 @@ def countdownit(watchlist_path, out_path, mailgun_domain,
     """
     f = m.run_pipeline(watchlist_path, out_path=out_path,
       mailgun_domain=mailgun_domain, mailgun_key=mailgun_key,
-      as_html=as_html, use_async=use_async, do_filter_sales=do_filter_sales)
+      as_html=as_html, do_filter_sales=do_filter_sales)
 
     if out_path is None:
         print(f.to_csv(index=False))
