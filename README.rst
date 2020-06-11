@@ -51,6 +51,11 @@ Notes
 Changes
 ========
 
+1.0.1, 2020-06-11
+-----------------
+- Bugfixed a null edge cases in ``collect_products()`` and ``filter_sales()``.
+
+
 1.0.0, 2020-06-11
 -----------------
 - Switched to Poetry
