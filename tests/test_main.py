@@ -1,7 +1,6 @@
 import tempfile
 
 import requests
-import grequests
 import responses
 import pandas as pd
 
@@ -25,9 +24,6 @@ def test_get_product():
 
     r = get_product('hello')
     assert isinstance(r, requests.models.Response)
-
-    r = get_product('hello', use_async=True)
-    assert isinstance(r, grequests.AsyncRequest)
 
 def test_parse_product():
     r = requests.models.Response()
