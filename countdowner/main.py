@@ -106,7 +106,7 @@ def read_watchlist(path):
     # Read
     path = Path(path)
     with path.open('r') as src:
-        watchlist_yaml = yaml.load(src)
+        watchlist_yaml = yaml.safe_load(src)
 
     # Parse
     watchlist = parse_watchlist(watchlist_yaml)
@@ -120,16 +120,16 @@ def read_watchlist(path):
 # -------------------------
 # Countdown API functions
 # -------------------------
-def get_product(stock_code, async=False):
+def get_product(stock_code, *, use_async=False):
     """
     Issue a GET request to Countdown at
     https://shop.countdown.co.nz/Shop/ProductDetails
     with the given stock code (string), and return the response.
-    If ``async``, then return an unissued GET request for
+    If ``use_async``, then return an unissued GET request for
     asynchronous queueing.
     """
     url = 'https://shop.countdown.co.nz/Shop/ProductDetails'
-    if async:
+    if use_async:
         get = grequests.get
     else:
         get = requests.get
@@ -220,18 +220,18 @@ def parse_product(response):
 
     return d
 
-def collect_products(stock_codes, async=True, as_df=True):
+def collect_products(stock_codes, *, use_async=True, as_df=True):
     """
     For each item in the given list of stock codes (list of strings),
     call :func:`get_product`, parse the responses,
     and return the results as a list of dictionaries.
-    If ``async``, then issue the requests asynchronously.
+    If ``use_async``, then issue the requests asynchronously.
     If ``as_df``, then return the result as a DataFrame
     with columns equal to the keys listed in :func:`parse_product`.
     """
     results = []
-    responses = (get_product(code, async) for code in stock_codes)
-    if async:
+    responses = (get_product(code, use_async=use_async) for code in stock_codes)
+    if use_async:
         responses = grequests.imap(responses)
     for response in responses:
         info = parse_product(response)
@@ -267,7 +267,7 @@ def email(products, email_addresses, mailgun_domain, mailgun_key, as_html=True):
 
     url = 'https://api.mailgun.net/v3/{!s}/messages'.format(mailgun_domain)
     auth = ('api', mailgun_key)
-    to = ', '.join(email_addresses)
+    to = email_addresses
     subject = '{!s} sales on your Countdown watchlist'.format(
       products.shape[0])
     data = {
@@ -283,12 +283,12 @@ def email(products, email_addresses, mailgun_domain, mailgun_key, as_html=True):
     return requests.post(url, auth=auth, data=data)
 
 def run_pipeline(watchlist_path, out_path=None, mailgun_domain=None,
-  mailgun_key=None, as_html=True, async=True, do_filter_sales=False):
+  mailgun_key=None, *, as_html=True, use_async=True, do_filter_sales=False):
     """
     Read a YAML watchlist located at ``watchlist_path``
     (string or Path object), one that :func:`read_watchlist` can read,
     collect all the product information from Countdown
-    (asynchronously if ``async``), and keep only the items on sale
+    (asynchronously if ``use_async``), and keep only the items on sale
     if ``do_filter_sales``.
 
     Return the resulting DataFrame.
@@ -305,7 +305,7 @@ def run_pipeline(watchlist_path, out_path=None, mailgun_domain=None,
 
     # Collect updates
     codes = w['products']['stock_code']
-    f = collect_products(codes, async)
+    f = collect_products(codes, use_async=use_async)
 
     if do_filter_sales:
         f = filter_sales(f)
