@@ -60,6 +60,10 @@ def test_collect_products():
     assert isinstance(f, pd.DataFrame)
     assert f.shape == (2, 9)
 
+    f = collect_products([])
+    assert isinstance(f, pd.DataFrame)
+    assert f.empty
+
 def test_filter_sales():
     f = pd.DataFrame([['a', 2, 3, 20.1]],
       columns=['name', 'sale_price', 'price', 'discount_percentage'])
@@ -69,6 +73,11 @@ def test_filter_sales():
 
     f = pd.DataFrame([['a', None, 3, 20.1]],
       columns=['name', 'sale_price', 'price', 'discount_percentage'])
+    g = filter_sales(f)
+    assert isinstance(g, pd.DataFrame)
+    assert g.empty
+
+    f = pd.DataFrame()
     g = filter_sales(f)
     assert isinstance(g, pd.DataFrame)
     assert g.empty

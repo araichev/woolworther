@@ -238,10 +238,11 @@ def collect_products(stock_codes, *, use_async=True, as_df=True):
         results.append(info)
 
     if as_df:
-        results = pd.DataFrame(results).sort_values(
-          'discount_percentage', ascending=False)
-        if not results.empty:
+        if results:
+            results = pd.DataFrame(results).sort_values('discount_percentage', ascending=False)
             results['datetime'] = pd.to_datetime(results['datetime'])
+        else:
+            results = pd.DataFrame()
 
     return results
 
@@ -254,8 +255,13 @@ def filter_sales(products):
     :func:`collect_products`, keep only the items on sale and the
     columns ``['name', 'sale_price', 'price', 'discount']``.
     """
-    cols = ['name', 'sale_price', 'price', 'discount_percentage']
-    return products.loc[products['sale_price'].notnull(), cols]
+    if products.empty:
+        result = products
+    else:
+        cols = ['name', 'sale_price', 'price', 'discount_percentage']
+        result = products.loc[products['sale_price'].notna(), cols]
+
+    return result
 
 def email(products, email_addresses, mailgun_domain, mailgun_key, as_html=True):
     """
