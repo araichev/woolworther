@@ -32,7 +32,7 @@ Here is a common workflow.
       Earthcare double toilet paper,381895
       Dijon mustard,700630
 
-#. Use the ``countdowner`` library functions as in the IPython notebook at ``ipynb/examples.ipynb`` or run ``countdownit --help`` from the command line for information on the command line tool.  To use the emailing functionality of ``countdowner``, you'll need a (free) `Mailgun account <https://mailgun.com>`_.
+#. Use the ``countdowner`` library functions as in the IPython notebook at ``ipynb/examples.ipynb`` or run ``countdownit --help`` from the command line for information on the command line tool.  To use the emailing functionality of ``countdowner``, you'll need a GMail account.
 
 
 Authors
@@ -45,15 +45,19 @@ Notes
 - Development status is Alpha
 - This project uses semantic versioning
 - I might extend this to New World stores once they roll out `more online shopping <http://www.newworld.co.nz/online-shopping/>`_
-- Will replace ``grequests`` with a faster asynchronous HTTP requester as soon as someone makes one for ``trio``
-- Will eventually replace Mailgun with `yagmail <https://github.com/kootenpv/yagmail>`_.
+
 
 Changes
 ========
 
+3.0.0, 2020-06-??
+-----------------
+- Breaking change: Switched to using Yagmail instead of Mailgun.
+
+
 2.0.0, 2020-06-11
 -----------------
-- Removed async feature for the time being, because the latest ``requests`` and ``grequests`` were conflicting.
+- Breaking change: Removed async feature for the time being, because the latest ``requests`` and ``grequests`` were conflicting.
 
 
 1.0.1, 2020-06-11

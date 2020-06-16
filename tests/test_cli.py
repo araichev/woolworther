@@ -10,25 +10,23 @@ from countdowner.cli import *
 
 runner = CliRunner()
 
+
 @responses.activate
 def test_countdownit():
     # Create mock GET response
-    responses.add(responses.GET,
-      'https://shop.countdown.co.nz/Shop/ProductDetails',
-      status=200, body='junk', content_type='text/xml')
+    responses.add(
+        responses.GET,
+        "https://shop.countdown.co.nz/Shop/ProductDetails",
+        status=200,
+        body="junk",
+        content_type="text/xml",
+    )
 
-    # Create mock POST response
-    domain = 'fake'
-    responses.add(responses.POST,
-      'https://api.mailgun.net/v3/{!s}/messages'.format(domain),
-      status=200, body='junk', content_type='application/json')
-
-    w_path = DATA_DIR/'watchlist.yaml'
+    w_path = DATA_DIR / "watchlist.yaml"
 
     result = runner.invoke(countdownit, [str(w_path)])
     assert result.exit_code == 0
 
     with tempfile.NamedTemporaryFile() as tmp:
-        result = runner.invoke(countdownit,
-          [str(w_path), '-o', tmp.name, '-d', domain, '-k', 'api'])
+        result = runner.invoke(countdownit, [str(w_path), "-o", tmp.name])
         assert result.exit_code == 0
