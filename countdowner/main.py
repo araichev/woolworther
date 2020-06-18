@@ -128,8 +128,11 @@ def get_product(stock_code: str):
     https://shop.countdown.co.nz/Shop/ProductDetails
     with the given stock code (string), and return the response.
     """
-    url = "https://shop.countdown.co.nz/Shop/ProductDetails"
-    return requests.get(url, params={"stockcode": stock_code})
+    url = f"https://shop.countdown.co.nz/api/v1/products/{stock_code}"
+    headers = {
+        "x-requested-with": "OnlineShopping.WebApp",
+    }
+    return requests.get(url, headers=headers)
 
 
 def price_to_float(price_string: str) -> float:
@@ -179,7 +182,8 @@ def parse_product(response) -> Dict:
     if response.status_code != 200:
         return d
 
-    soup = BeautifulSoup(response.text, "lxml")
+    response.html.render(timeout=60)
+    soup = BeautifulSoup(response.html.html, "lxml")
 
     if not soup.find("input", attrs={"name": "stockcode"}):
         return d

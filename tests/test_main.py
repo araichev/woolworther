@@ -21,7 +21,7 @@ def test_get_product():
     # Create mock GET response
     responses.add(
         responses.GET,
-        "https://shop.countdown.co.nz/Shop/ProductDetails",
+        "https://shop.countdown.co.nz/shop/productdetails",
         status=200,
         body="junk",
         content_type="text/xml",
@@ -34,7 +34,7 @@ def test_get_product():
 def test_parse_product():
     r = requests.models.Response()
     setattr(
-        r, "url", "https://shop.countdown.co.nz/Shop/ProductDetails?stockcode=bingo"
+        r, "url", "https://shop.countdown.co.nz/shop/productdetails?stockcode=bingo"
     )
     p = parse_product(r)
     assert isinstance(p, dict)
@@ -58,7 +58,7 @@ def test_collect_products():
     # Create mock GET response
     responses.add(
         responses.GET,
-        "https://shop.countdown.co.nz/Shop/ProductDetails",
+        "https://shop.countdown.co.nz/shop/productdetails",
         status=200,
         body="junk",
         content_type="text/xml",
@@ -101,7 +101,7 @@ def test_run_pipeline():
     # Create mock GET response
     responses.add(
         responses.GET,
-        "https://shop.countdown.co.nz/Shop/ProductDetails",
+        "https://shop.countdown.co.nz/shop/productdetails",
         status=200,
         body="junk",
         content_type="text/xml",
