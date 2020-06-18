@@ -17,7 +17,7 @@ import countdowner.main as m
 )
 @click.option(
     "-s",
-    "--filter_sales",
+    "--sales_only",
     is_flag=True,
     default=False,
     help="Keep only the products on sale; defaults to False",
@@ -30,12 +30,12 @@ def countdownit(
     gmail_password,
     *,
     as_plaintext,
-    filter_sales,
+    sales_only,
 ):
     """
     Read a YAML watchlist located at WATCHLIST_PATH,
     collect all the product information from Countdown,
-    keep only the sales data if DO_FILTER_SALES.
+    keep only the sales data if sales_only.
     Print the resulting product information to stdout as a CSV string.
     If OUT_PATH is given, then instead write the CSV to a file
     located at OUT_PATH.
@@ -50,7 +50,7 @@ def countdownit(
         gmail_username=gmail_username,
         gmail_password=gmail_password,
         as_plaintext=as_plaintext,
-        filter_sales=filter_sales,
+        sales_only=sales_only,
     )
 
     if out_path is None:

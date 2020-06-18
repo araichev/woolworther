@@ -297,12 +297,12 @@ def run_pipeline(
     gmail_password: Optional[str] = None,
     *,
     as_plaintext: bool = False,
-    filter_sales: bool = False,
+    sales_only: bool = False,
 ):
     """
     Read a YAML watchlist located at ``watchlist_path``, one that :func:`read_watchlist` can read,
     collect all the product information from Countdown, and keep only the items on sale
-    if ``filter_sales``.
+    if ``sales_only``.
 
     Return the resulting DataFrame.
     If an output path is given, then instead write the result to a CSV at that path.
@@ -320,7 +320,7 @@ def run_pipeline(
     codes = w["products"]["stock_code"]
     f = collect_products(codes)
 
-    if filter_sales:
+    if sales_only:
         f = filter_sales(f)
         subject = f"{f.shape[0]} sales on your Countdown watchlist"
     else:
