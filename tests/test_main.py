@@ -109,7 +109,7 @@ def test_run_pipeline():
 
     w_path = DATA_DIR / "watchlist.yaml"
     # Test without writing to file
-    f = run_pipeline(w_path, filter_sales=False)
+    f = run_pipeline(w_path, sales_only=False)
     # Should be a DataFrame
     assert isinstance(f, pd.DataFrame)
     # File should contain all the products in the watchlist
@@ -118,7 +118,7 @@ def test_run_pipeline():
 
     # Test with writing to file
     with tempfile.NamedTemporaryFile() as tmp:
-        run_pipeline(w_path, out_path=tmp.name, filter_sales=False)
+        run_pipeline(w_path, out_path=tmp.name, sales_only=False)
         # File should be a CSV
         f = pd.read_csv(tmp)
         assert isinstance(f, pd.DataFrame)
