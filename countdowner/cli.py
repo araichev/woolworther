@@ -3,21 +3,35 @@ import click
 import countdowner.main as m
 
 
-@click.command(short_help='Get the current prices of your watchlist products')
-@click.option('-o', '--out_path', default=None,
-  help='Path to write CSV output')
-@click.option('-d', '--mailgun_domain', default=None,
-  help='Mailgun domain key')
-@click.option('-k', '--mailgun_key', default=None,
-  help='Mailgun API key')
-@click.option('-h', '--as_html', is_flag=True, default=True,
-  help='Send the optional email as HTML if true;'
-  'otherwise send it as text; defaults to True')
-@click.option('-s', '--do_filter_sales', is_flag=True, default=False,
-  help='Keep only the products on sale; defaults to False')
-@click.argument('watchlist_path')
-def countdownit(watchlist_path, out_path, mailgun_domain,
-  mailgun_key, as_html, do_filter_sales):
+@click.command(short_help="Get the current prices of your watchlist products")
+@click.option("-o", "--out_path", default=None, help="Path to write CSV output")
+@click.option("-gu", "--gmail_username", default=None, help="GMail username")
+@click.option("-gp", "--gmail_password", default=None, help="GMail password")
+@click.option(
+    "-t",
+    "--as_plaintext",
+    is_flag=False,
+    default=False,
+    help="Send the optional email in plaintext if true;"
+    "otherwise send it as HTML; defaults to False",
+)
+@click.option(
+    "-s",
+    "--filter_sales",
+    is_flag=True,
+    default=False,
+    help="Keep only the products on sale; defaults to False",
+)
+@click.argument("watchlist_path")
+def countdownit(
+    watchlist_path,
+    out_path,
+    gmail_username,
+    gmail_password,
+    *,
+    as_plaintext,
+    filter_sales,
+):
     """
     Read a YAML watchlist located at WATCHLIST_PATH,
     collect all the product information from Countdown,
@@ -30,9 +44,14 @@ def countdownit(watchlist_path, out_path, mailgun_domain,
     are given, then additionally email the product table
     to the email address listed in the watchlist.
     """
-    f = m.run_pipeline(watchlist_path, out_path=out_path,
-      mailgun_domain=mailgun_domain, mailgun_key=mailgun_key,
-      as_html=as_html, do_filter_sales=do_filter_sales)
+    f = m.run_pipeline(
+        watchlist_path,
+        out_path=out_path,
+        gmail_username=gmail_username,
+        gmail_password=gmail_password,
+        as_plaintext=as_plaintext,
+        filter_sales=filter_sales,
+    )
 
     if out_path is None:
         print(f.to_csv(index=False))

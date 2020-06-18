@@ -1,6 +1,6 @@
 .env
 output
-ipynb/prototyping.ipynb
+notebooks/prototyping.ipynb
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
@@ -68,7 +68,7 @@ instance/
 target/
 
 # Jupyter Notebook
-ipynb/.ipynb_checkpoints
+notebooks/.ipynb_checkpoints
 
 # pyenv
 .python-version
