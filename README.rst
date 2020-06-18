@@ -50,7 +50,7 @@ Notes
 Changes
 ========
 
-3.0.0, 2020-06-??
+3.0.0, 2020-06-18
 -----------------
 - Breaking change: Switched to using Yagmail instead of Mailgun.
 
