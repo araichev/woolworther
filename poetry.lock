@@ -980,7 +980,7 @@ python-versions = "*"
 version = "1.9.0"
 
 [[package]]
-category = "dev"
+category = "main"
 description = "Alternative regular expression module, to replace re."
 name = "regex"
 optional = false
@@ -1097,6 +1097,17 @@ version = "0.4.4"
 
 [package.extras]
 test = ["pathlib2"]
+
+[[package]]
+category = "main"
+description = "Python Port of John Gruber's titlecase.pl"
+name = "titlecase"
+optional = false
+python-versions = "*"
+version = "1.1.1"
+
+[package.dependencies]
+regex = ">=2020.4.4"
 
 [[package]]
 category = "dev"
@@ -1255,7 +1266,7 @@ docs = ["sphinx", "jaraco.packaging (>=3.2)", "rst.linker (>=1.9)"]
 testing = ["jaraco.itertools", "func-timeout"]
 
 [metadata]
-content-hash = "afc9c946b4e0d0156d6b2b267f119e9c8b3b5a29484bfb00c9fca8753db5d4fb"
+content-hash = "67db2d9b4c68d78cd9b831ede45d54097dd917a3ee863ace82c379a7e73eadce"
 python-versions = "^3.7||^3.8"
 
 [metadata.files]
@@ -1808,6 +1819,10 @@ terminado = [
 testpath = [
     {file = "testpath-0.4.4-py2.py3-none-any.whl", hash = "sha256:bfcf9411ef4bf3db7579063e0546938b1edda3d69f4e1fb8756991f5951f85d4"},
     {file = "testpath-0.4.4.tar.gz", hash = "sha256:60e0a3261c149755f4399a1fff7d37523179a70fdc3abdf78de9fc2604aeec7e"},
+]
+titlecase = [
+    {file = "titlecase-1.1.1-py3-none-any.whl", hash = "sha256:2e590c0a67503d5f69c1f8f006f45b802506fb17397faaf17186f0b9292b486c"},
+    {file = "titlecase-1.1.1.tar.gz", hash = "sha256:16e279edf085293bc9c44a68ce959c7d6cd5c653e6b5669a3a3640015cb63eb6"},
 ]
 toml = [
     {file = "toml-0.10.1-py2.py3-none-any.whl", hash = "sha256:bda89d5935c2eac546d648028b9901107a595863cb36bae0c73ac804a9b4ce88"},
