@@ -50,6 +50,11 @@ Notes
 Changes
 ========
 
+3.1.0, 2020-06-19
+-----------------
+- Handled new Countdown API.
+
+
 3.0.0, 2020-06-18
 -----------------
 - Breaking change: Switched to using Yagmail instead of Mailgun.

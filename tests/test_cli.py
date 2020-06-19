@@ -1,9 +1,10 @@
 import tempfile
+import re
 
 from click.testing import CliRunner
 import responses
 
-from .context import countdowner, DATA_DIR
+from .context import countdowner, DATA_DIR, BODY
 from countdowner import *
 from countdowner.cli import *
 
@@ -16,10 +17,11 @@ def test_countdownit():
     # Create mock GET response
     responses.add(
         responses.GET,
-        "https://shop.countdown.co.nz/Shop/ProductDetails",
+        re.compile("https://shop.countdown.co.nz/api/v1/products/(\\w)+"),
+        match_querystring=False,
         status=200,
-        body="junk",
-        content_type="text/xml",
+        body=BODY,
+        content_type="application/json",
     )
 
     w_path = DATA_DIR / "watchlist.yaml"

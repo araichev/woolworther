@@ -9,7 +9,7 @@ import re
 
 import yaml
 import requests
-from bs4 import BeautifulSoup
+import titlecase as tc
 import pandas as pd
 import yagmail
 
@@ -128,8 +128,11 @@ def get_product(stock_code: str):
     https://shop.countdown.co.nz/Shop/ProductDetails
     with the given stock code (string), and return the response.
     """
-    url = "https://shop.countdown.co.nz/Shop/ProductDetails"
-    return requests.get(url, params={"stockcode": stock_code})
+    url = f"https://shop.countdown.co.nz/api/v1/products/{stock_code}"
+    headers = {
+        "x-requested-with": "OnlineShopping.WebApp",
+    }
+    return requests.get(url, headers=headers)
 
 
 def price_to_float(price_string: str) -> float:
@@ -149,70 +152,44 @@ def parse_product(response) -> Dict:
     - ``'name'``
     - ``'description'``
     - ``'size'``
-    - ``'sale_price'``
-    - ``'price'``
-    - ``'discount_percentage'``
-    - ``'unit_price'``
-    - ``'datetime'``: current datetime as a ``'%Y-%m-%dT%H:%M:%S'``
-      string
+    - ``'unit_price_($)'``
+    - ``'unit_size_($)'``
+    - ``'sale_price_($)'``
+    - ``'normal_price_($)'``
+    - ``'discount_(%)'``
+    - ``'datetime'``: current datetime as a ``'%Y-%m-%dT%H:%M:%S'`` string
 
     Use ``None`` values when the information is not found in the response.
     """
-    keys = [
-        "stock_code",
-        "name",
-        "description",
-        "size",
-        "sale_price",
-        "price",
-        "discount_percentage",
-        "unit_price",
-        "datetime",
-    ]
-    d = OrderedDict([(key, None) for key in keys])
-
-    # Get stock code from URL and set datetime
-    d["stock_code"] = re.search(r"stockcode=(\w+)", response.url).group(1)
-    d["datetime"] = dt.datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
+    # Initialize result
+    d = {
+        "stock_code": re.search(r"products/(\w+)", response.url).group(1),
+        "name": None,
+        "description": None,
+        "size": None,
+        "unit_price_($)": None,
+        "unit_size": None,
+        "sale_price_($)": None,
+        "normal_price_($)": None,
+        "discount_(%)": None,
+        "datetime": dt.datetime.now().strftime("%Y-%m-%dT%H:%M:%S"),
+    }
 
     # Handle bad product data
     if response.status_code != 200:
         return d
 
-    soup = BeautifulSoup(response.text, "lxml")
-
-    if not soup.find("input", attrs={"name": "stockcode"}):
-        return d
-
-    # Handle good product data
-    d["name"] = soup.find("div", class_="product-title").h1.text.strip()
-    d["description"] = (
-        soup.find("p", class_="product-description-text").text.strip() or None
+    r = response.json()
+    d["name"] = tc.titlecase(r["name"])
+    d["description"] = r["description"]
+    d["size"] = r["size"]["volumeSize"]
+    d["unit_price_($)"] = r["size"]["cupPrice"]
+    d["unit_size"] = r["size"]["cupMeasure"]
+    d["sale_price_($)"] = r["price"]["salePrice"]
+    d["normal_price_($)"] = r["price"]["originalPrice"]
+    d["discount_(%)"] = round(
+        100 * (1 - d["sale_price_($)"] / d["normal_price_($)"]), 1
     )
-    d["size"] = soup.find("span", class_="volume-size").text.strip() or None
-
-    s1 = soup.find("span", class_="special-price")
-    s2 = soup.find("span", class_="club-price-wrapper")
-    s3 = soup.find("span", class_="price")
-    if s1:
-        d["sale_price"] = price_to_float(list(s1.stripped_strings)[0])
-        t = soup.find("span", class_="was-price")
-        d["price"] = price_to_float(list(t.stripped_strings)[0].replace("was", ""))
-    elif s2:
-        d["sale_price"] = price_to_float(list(s2.stripped_strings)[0])
-        t = soup.find("span", class_="non-club-price")
-        d["price"] = price_to_float(
-            list(t.stripped_strings)[0].replace("non club price", "")
-        )
-    elif s3:
-        d["price"] = price_to_float(list(s3.stripped_strings)[0])
-
-    if d["sale_price"] is not None:
-        d["discount_percentage"] = round(100 * (1 - d["sale_price"] / d["price"]), 1)
-    else:
-        d["discount_percentage"] = None
-
-    d["unit_price"] = soup.find("div", class_="cup-price").string.strip() or None
 
     return d
 
@@ -233,9 +210,7 @@ def collect_products(stock_codes: List[str], *, as_df: bool = True):
 
     if as_df:
         if results:
-            results = pd.DataFrame(results).sort_values(
-                "discount_percentage", ascending=False
-            )
+            results = pd.DataFrame(results).sort_values("discount_(%)", ascending=False)
             results["datetime"] = pd.to_datetime(results["datetime"])
         else:
             results = pd.DataFrame()
@@ -253,10 +228,14 @@ def filter_sales(products: pd.DataFrame) -> pd.DataFrame:
     columns ``['name', 'sale_price', 'price', 'discount']``.
     """
     if products.empty:
-        result = products
+        result = products.copy()
     else:
-        cols = ["name", "sale_price", "price", "discount_percentage"]
-        result = products.loc[products["sale_price"].notna(), cols]
+        cols = ["name", "sale_price_($)", "normal_price_($)", "discount_(%)"]
+        result = (
+            products.loc[lambda x: x["discount_(%)"] > 0]
+            .filter(cols)
+            .reset_index(drop=True)
+        )
 
     return result
 
