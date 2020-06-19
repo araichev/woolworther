@@ -187,9 +187,12 @@ def parse_product(response) -> Dict:
     d["unit_size"] = r["size"]["cupMeasure"]
     d["sale_price_($)"] = r["price"]["salePrice"]
     d["normal_price_($)"] = r["price"]["originalPrice"]
-    d["discount_(%)"] = round(
-        100 * (1 - d["sale_price_($)"] / d["normal_price_($)"]), 1
-    )
+    if d["normal_price_($)"] != 0:
+        d["discount_(%)"] = round(
+            100 * (1 - d["sale_price_($)"] / d["normal_price_($)"]), 1
+        )
+    else:
+        d["discount_(%)"] = 0
 
     return d
 
