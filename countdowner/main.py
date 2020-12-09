@@ -1,127 +1,60 @@
 from typing import List, Dict, Optional
 import datetime as dt
-from collections import OrderedDict
 import pathlib as pl
 import os
-import json
-import io
 import re
 
-import yaml
 import requests
 import titlecase as tc
 import pandas as pd
 import yagmail
 
 
-ROOT = pl.Path(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-WATCHLIST_FIELDS = [
-    "name",
-    "email_addresses",
-    "products",
-]
-EMAIL_PATTERN = re.compile(r"[^@]+@[^@]+\.[^@]+")
+BASE_DIR = pl.Path(os.path.dirname(os.path.abspath(__file__)))
+DATA_DIR = BASE_DIR / "data"
 PRICE_PATTERN = re.compile(r"\d+\.\d\d")
 
 
-# ---------------------
-# Watchlist functions
-# ---------------------
-def parse_df(csv_text: str, **kwargs) -> pd.DataFrame:
+def convert_google_sheet_url(url: str) -> str:
     """
-    Given a CSV text with a header, convert it to a DataFrame and
-    return the result.
+    Given a Google Sheets URL, convert it to a CSV download URL.
     """
-    csv = io.StringIO(csv_text)
-    return pd.read_table(csv, sep=",", **kwargs)
+    return "/".join(url.split("/")[:-1]) + "/export?format=csv"
 
 
-def parse_watchlist(watchlist_yaml: pl.PosixPath) -> Dict:
-    """
-    Given a (decoded) YAML dictionary representing a product watchlist
-    convert the CSV text fields to DataFrame and return the resulting
-    dictionary.
-    If keys are missing from the dictionary, add them and set their values
-    to ``None`` to aid format checking in :func:`check_watchlist`.
-    """
-    w = {}
-
-    # Set all missing keys to None
-    for key in WATCHLIST_FIELDS:
-        if key in watchlist_yaml:
-            w[key] = watchlist_yaml[key]
-        else:
-            w[key] = None
-
-    if w["products"] is not None:
-        w["products"] = parse_df(w["products"], dtype={"stock_code": str})
-
-    return w
-
-
-def valid_email(x: str):
-    """
-    Return ``True`` if ``x`` is a valid email address;
-    otherwise return ``False``.
-    """
-    if isinstance(x, str) and re.match(EMAIL_PATTERN, x):
-        return True
-    else:
-        return False
-
-
-def check_watchlist(watchlist: Dict):
+def check_watchlist(watchlist: pd.DataFrame) -> pd.DataFrame:
     """
     Raise an error if the given watchlist (dictionary) is invalid.
     """
-    w = watchlist
-    if not isinstance(w["name"], str) or not len(w["name"]):
-        raise ValueError("Name must be a nonempty string")
+    if not "stock_code" in watchlist.columns:
+        raise ValueError(f"Watchlist must contain the column stock_code")
 
-    for e in w["email_addresses"]:
-        if not valid_email(e):
-            raise ValueError("Invalid email address", e)
+    if not watchlist.stock_code.dropna().nunique():
+        raise ValueError(f"Column stock_code must contain at least one value")
 
-    p = w["products"]
-    if p is None:
-        raise ValueError("Products must be given")
-    if not set(["description", "stock_code"]) <= set(p.columns):
-        raise ValueError('Products must have "description" and "stock_code" fields')
-
-
-def read_watchlist(path: pl.PosixPath) -> Dict:
-    """
-    Read a YAML file of watchlist data at the given path,
-    parse the file, check it, and return the resulting watchlist
-    dictionary.
-    The YAML file should have the following form::
-
-        - name: Hello
-        - email_addresses: [a@b.com, c@d.net]
-        - products: |
-            description,stock_code
-            chips sis,267945
-            bagels bro,285453
-
-    """
-    # Read
-    path = pl.Path(path)
-    with path.open("r") as src:
-        watchlist_yaml = yaml.safe_load(src)
-
-    # Parse
-    watchlist = parse_watchlist(watchlist_yaml)
-
-    # Check
-    check_watchlist(watchlist)
-
-    # Create
     return watchlist
 
 
-# -------------------------
-# Countdown API functions
-# -------------------------
+def read_watchlist(path_or_url: str) -> List[str]:
+    """
+    Read the watchlist CSV at the given path, check it, and
+    return its list of stock codes.
+    The CSV file should have at least the column
+
+    - ``'stock_code'``: the stock code of a product
+
+    More columns are OK and will be ignored.
+    """
+    # If given a Google Sheet path, convert it to a CSV download path
+    if (p := str(path_or_url)).startswith("https://docs.google.com/spreadsheets/d/"):
+        path_or_url = convert_google_sheet_url(p)
+
+    # Read and check watchlist
+    w = pd.read_csv(path_or_url, dtype={"stock_code": str}).pipe(check_watchlist)
+
+    return w.stock_code.to_list()
+
+
 def get_product(stock_code: str):
     """
     Issue a GET request to Countdown at
@@ -221,9 +154,6 @@ def collect_products(stock_codes: List[str], *, as_df: bool = True):
     return results
 
 
-# -------------------------
-# Data pipeline functions
-# -------------------------
 def filter_sales(products: pd.DataFrame) -> pd.DataFrame:
     """
     Given a DataFrame of products of the form returned by
@@ -251,7 +181,7 @@ def email(
     gmail_password: str,
     *,
     as_plaintext: bool = False,
-):
+) -> None:
     """
     Email the given product DataFrame to the given recipient email addresses
     using GMail with the given username and password.
@@ -274,6 +204,7 @@ def email(
 
 def run_pipeline(
     watchlist_path: pl.PosixPath,
+    recipients: List[str] = None,
     out_path: Optional[pl.PosixPath] = None,
     gmail_username: Optional[str] = None,
     gmail_password: Optional[str] = None,
@@ -282,25 +213,20 @@ def run_pipeline(
     sales_only: bool = False,
 ):
     """
-    Read a YAML watchlist located at ``watchlist_path``, one that :func:`read_watchlist` can read,
+    Read a CSV watchlist located at ``watchlist_path``, one that :func:`read_watchlist` can read,
     collect all the product information from Countdown, and keep only the items on sale
     if ``sales_only``.
-
     Return the resulting DataFrame.
+
     If an output path is given, then instead write the result to a CSV at that path.
 
-    If a GMail username and password are given, then additionally send an email
-    from that email address to the recipients mentioned in the watchlist
-    and with the product information.
+    If a list of recipient email addresses is given, along with a
+    GMail username and password, then additionally email the product information
+    from that GMail email address to the recipients.
     Use the function :func:`email` for this.
     """
-    # Read products
-    watchlist_path = pl.Path(watchlist_path)
-    w = read_watchlist(watchlist_path)
-
-    # Collect updates
-    codes = w["products"]["stock_code"]
-    f = collect_products(codes)
+    stock_codes = read_watchlist(watchlist_path)
+    f = collect_products(stock_codes)
 
     if sales_only:
         f = filter_sales(f)
@@ -309,10 +235,10 @@ def run_pipeline(
         subject = f"{f.shape[0]} items on your Countdown watchlist"
 
     # Filter sale items and email
-    if gmail_username is not None and gmail_password is not None:
+    if recipients and gmail_username is not None and gmail_password is not None:
         email(
             f,
-            recipients=w["email_addresses"],
+            recipients=recipients,
             subject=subject,
             gmail_username=gmail_username,
             gmail_password=gmail_password,

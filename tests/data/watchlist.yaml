@@ -1,9 +1,0 @@
-name: test
-email_addresses:
-  - brainbummer@mailinator.com
-  - rhymedude@mailinator.com
-products: |
-  description,stock_code
-  Brazil nuts,291156
-  GB chocolate,32467
-  cheese,281739
