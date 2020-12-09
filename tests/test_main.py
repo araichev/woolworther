@@ -1,19 +1,27 @@
 import tempfile
 
+
+import pytest
 import requests
 import responses
 import pandas as pd
 
-from .context import countdowner, DATA_DIR, BODY
+from .context import countdowner, BODY
 from countdowner import *
 
 
+def test_convert_google_sheet_url():
+    url = "https://docs.google.com/spreadsheets/d/DOCID/edit?usp=sharing"
+    expect = "https://docs.google.com/spreadsheets/d/DOCID/export?format=csv"
+    assert convert_google_sheet_url(url) == expect
+
+
 def test_read_watchlist():
-    w = read_watchlist(DATA_DIR / "watchlist.yaml")
-    assert isinstance(w, dict)
-    expect_keys = {"products", "email_addresses", "name"}
-    assert set(w.keys()) == expect_keys
-    assert isinstance(w["products"], pd.DataFrame)
+    stock_codes = read_watchlist(DATA_DIR / "watchlist.csv")
+    assert isinstance(stock_codes, list)
+
+    with pytest.raises(ValueError):
+        read_watchlist(DATA_DIR / "bad_watchlist.csv")
 
 
 @responses.activate
@@ -75,16 +83,16 @@ def test_collect_products():
 
 def test_filter_sales():
     f = pd.DataFrame(
-        [["a", 2, 3, 20.1]],
-        columns=["name", "sale_price_($)", "normal_price_($)", "discount_(%)"],
+        [["a", 1, 2, 3, 20.1]],
+        columns=["name", "size", "sale_price_($)", "normal_price_($)", "discount_(%)"],
     )
     g = filter_sales(f)
     assert isinstance(g, pd.DataFrame)
     assert g.to_dict() == f.to_dict()
 
     f = pd.DataFrame(
-        [["a", 2, 3, 0]],
-        columns=["name", "sale_price_($)", "normal_price_($)", "discount_(%)"],
+        [["a", 1, 2, 3, 0]],
+        columns=["name", "size", "sale_price_($)", "normal_price_($)", "discount_(%)"],
     )
     g = filter_sales(f)
     assert isinstance(g, pd.DataFrame)
@@ -108,22 +116,28 @@ def test_run_pipeline():
         content_type="application/json",
     )
 
-    w_path = DATA_DIR / "watchlist.yaml"
+    w_path = DATA_DIR / "watchlist.csv"
     # Test without writing to file
-    f = run_pipeline(w_path, sales_only=False)
+    f = run_pipeline(
+        w_path, recipients=["brainbummer@mailinator.com"], sales_only=False
+    )
     # Should be a DataFrame
     assert isinstance(f, pd.DataFrame)
     # File should contain all the products in the watchlist
-    w = read_watchlist(w_path)
-    assert set(w["products"].stock_code) == set(f.stock_code)
+    stock_codes = read_watchlist(w_path)
+    assert set(stock_codes) == set(f.stock_code)
 
     # Test with writing to file
     with tempfile.NamedTemporaryFile() as tmp:
-        run_pipeline(w_path, out_path=tmp.name, sales_only=False)
+        run_pipeline(
+            w_path,
+            recipients=["brainbummer@mailinator.com"],
+            out_path=tmp.name,
+            sales_only=False,
+        )
         # File should be a CSV
         f = pd.read_csv(tmp, dtype={"stock_code": str})
         assert isinstance(f, pd.DataFrame)
         # File should contain all the products in the watchlist
-        w = read_watchlist(w_path)
-        print(f)
-        assert set(w["products"].stock_code) == set(f.stock_code)
+        stock_codes = read_watchlist(w_path)
+        assert set(stock_codes) == set(f.stock_code)

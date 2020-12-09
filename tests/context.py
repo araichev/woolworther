@@ -7,8 +7,6 @@ sys.path.insert(0, os.path.abspath(".."))
 
 import countdowner
 
-
-DATA_DIR = Path("tests/data")
 # Body for mock responses
 BODY = json.dumps(
     {

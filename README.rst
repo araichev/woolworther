@@ -3,8 +3,7 @@ Countdowner
 .. image:: https://travis-ci.org/araichev/countdowner.svg?branch=master
     :target: https://travis-ci.org/araichev/countdowner
 
-A Python 3.7+ library to check for sales at Countdown grocery stores throughout New Zealand.
-Also has a command-line interface.
+A Python 3.8+ library to check for sales at Countdown grocery stores throughout New Zealand.
 
 
 Installation
@@ -14,25 +13,19 @@ Installation
 
 Usage
 ======
+Use as a library.
 Here is a common workflow.
 
 #. Get the stock codes of the products you want to watch by searching `the Countdown site <https://shop.countdown.co.nz/>`_.  The stock code of a product is listed in the URL of its details page. For example, the stock code for the product at ``https://shop.countdown.co.nz/Shop/ProductDetails?stockcode=214684&name=colgate-360-toothbrush-medium-whole-mouth-clean`` is ``214684``.
 
-#. Put your stock codes into a YAML watchlist along with your email address and a name for the watchlist.  The watchlist ---call it ``watchlist.yaml``--- should have the form::
+#. Put your stock codes in a CSV file with at least the column ``stock_code``. Other columns are OK and will be ignored, e.g.::
 
-    name: my_favorites
-    email_addresses:
-      - brainbummer@mailinator.com
-      - rhymedude@mailinator.com
-    products: |
-      description,stock_code
-      organic cheese,281739
-      GB chocolate,260803
-      Lupi olive oil,701829
-      Earthcare double toilet paper,381895
-      Dijon mustard,700630
+    product_description,stock_code
+    Brazil nuts,291156
+    GB chocolate,32467
+    cheese,281739
 
-#. Use the ``countdowner`` library functions as in the IPython notebook at ``ipynb/examples.ipynb`` or run ``countdownit --help`` from the command line for information on the command line tool.  To use the emailing functionality of ``countdowner``, you'll need a GMail account.
+#. Use the ``countdowner`` library functions as in the Jupyter notebook at ``notebooks/examples.ipynb`` to get price information for your products and optionally email the results.  For emailing you will need a GMail account.
 
 
 Authors
@@ -44,11 +37,16 @@ Notes
 ======
 - Development status is Alpha
 - This project uses semantic versioning
-- I might extend this to New World stores once they roll out `more online shopping <http://www.newworld.co.nz/online-shopping/>`_
 
 
 Changes
 ========
+
+4.0.0, 2020-12-10
+-----------------
+- Switched from YAML watchlists to CSV watchlists. Simpler.
+- Removed the CLI, because i didn't find it useful.
+
 
 3.1.0, 2020-06-19
 -----------------
