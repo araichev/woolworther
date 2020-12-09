@@ -3,8 +3,7 @@ Countdowner
 .. image:: https://travis-ci.org/araichev/countdowner.svg?branch=master
     :target: https://travis-ci.org/araichev/countdowner
 
-A Python 3.7+ library to check for sales at Countdown grocery stores throughout New Zealand.
-Also has a command-line interface.
+A Python 3.8+ library to check for sales at Countdown grocery stores throughout New Zealand.
 
 
 Installation
@@ -14,6 +13,7 @@ Installation
 
 Usage
 ======
+Use as a library.
 Here is a common workflow.
 
 #. Get the stock codes of the products you want to watch by searching `the Countdown site <https://shop.countdown.co.nz/>`_.  The stock code of a product is listed in the URL of its details page. For example, the stock code for the product at ``https://shop.countdown.co.nz/Shop/ProductDetails?stockcode=214684&name=colgate-360-toothbrush-medium-whole-mouth-clean`` is ``214684``.
@@ -42,9 +42,9 @@ Notes
 Changes
 ========
 
-4.0.0, 2020-12-??
+4.0.0, 2020-12-10
 -----------------
-- Switched from YAML watchlists to CSV watchlists.
+- Switched from YAML watchlists to CSV watchlists. Simpler.
 - Removed the CLI, because i didn't find it useful.
 
 

@@ -163,7 +163,7 @@ def filter_sales(products: pd.DataFrame) -> pd.DataFrame:
     if products.empty:
         result = products.copy()
     else:
-        cols = ["name", "sale_price_($)", "normal_price_($)", "discount_(%)"]
+        cols = ["name", "size", "sale_price_($)", "normal_price_($)", "discount_(%)"]
         result = (
             products.loc[lambda x: x["discount_(%)"] > 0]
             .filter(cols)
