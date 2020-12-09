@@ -1,5 +1,7 @@
 import tempfile
 
+
+import pytest
 import requests
 import responses
 import pandas as pd
@@ -7,14 +9,20 @@ import pandas as pd
 from .context import countdowner, DATA_DIR, BODY
 from countdowner import *
 
+def test_convert_google_sheet_url():
+    url = "https://docs.google.com/spreadsheets/d/DOCID/edit?usp=sharing"
+    expect = "https://docs.google.com/spreadsheets/d/DOCID/export?format=csv"
+    assert convert_google_sheet_url(url) == expect
 
 def test_read_watchlist():
-    w = read_watchlist(DATA_DIR / "watchlist.yaml")
+    w = read_watchlist(DATA_DIR / "watchlist.csv")
     assert isinstance(w, dict)
-    expect_keys = {"products", "email_addresses", "name"}
+    expect_keys = {"email_addresses", "products"}
     assert set(w.keys()) == expect_keys
     assert isinstance(w["products"], pd.DataFrame)
 
+    with pytest.raises(ValueError):
+        read_watchlist(DATA_DIR / "bad_watchlist.csv")
 
 @responses.activate
 def test_get_product():
@@ -108,7 +116,7 @@ def test_run_pipeline():
         content_type="application/json",
     )
 
-    w_path = DATA_DIR / "watchlist.yaml"
+    w_path = DATA_DIR / "watchlist.csv"
     # Test without writing to file
     f = run_pipeline(w_path, sales_only=False)
     # Should be a DataFrame

@@ -18,21 +18,14 @@ Here is a common workflow.
 
 #. Get the stock codes of the products you want to watch by searching `the Countdown site <https://shop.countdown.co.nz/>`_.  The stock code of a product is listed in the URL of its details page. For example, the stock code for the product at ``https://shop.countdown.co.nz/Shop/ProductDetails?stockcode=214684&name=colgate-360-toothbrush-medium-whole-mouth-clean`` is ``214684``.
 
-#. Put your stock codes into a YAML watchlist along with your email address and a name for the watchlist.  The watchlist ---call it ``watchlist.yaml``--- should have the form::
+#. Put your stock codes and email addresses into a CSV watchlist of the form::
 
-    name: my_favorites
-    email_addresses:
-      - brainbummer@mailinator.com
-      - rhymedude@mailinator.com
-    products: |
-      description,stock_code
-      organic cheese,281739
-      GB chocolate,260803
-      Lupi olive oil,701829
-      Earthcare double toilet paper,381895
-      Dijon mustard,700630
+    email_address,product_description,stock_code
+    brainbummer@mailinator.com,Brazil nuts,291156
+    rhymedude@mailinator.com,GB chocolate,32467
+    ,cheese,281739
 
-#. Use the ``countdowner`` library functions as in the IPython notebook at ``ipynb/examples.ipynb`` or run ``countdownit --help`` from the command line for information on the command line tool.  To use the emailing functionality of ``countdowner``, you'll need a GMail account.
+#. Use the ``countdowner`` library functions as in the Jupyter notebook at ``ipynb/examples.ipynb`` to email yourself the price information for your products.  To use the emailing functionality of ``countdowner``, you'll need a GMail account.
 
 
 Authors
@@ -49,6 +42,12 @@ Notes
 
 Changes
 ========
+
+4.0.0, 2020-12-??
+-----------------
+- Switched from YAML watchlists to CSV watchlists.
+- Removed the CLI, because i didn't find it useful.
+
 
 3.1.0, 2020-06-19
 -----------------

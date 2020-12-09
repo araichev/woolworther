@@ -12,7 +12,7 @@ pandas = "^1.0.4"
 click = "^7.1.2"
 pyyaml = "^5.3.1"
 lxml = "^4.5.1"
-yagmail = "^0.11.224"
+yagmail = "^0.14"
 keyring = "^21.2.1"
 titlecase = "^1.1.1"
 

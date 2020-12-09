@@ -1,9 +1,7 @@
 from typing import List, Dict, Optional
 import datetime as dt
-from collections import OrderedDict
 import pathlib as pl
 import os
-import json
 import io
 import re
 
@@ -16,9 +14,9 @@ import yagmail
 
 ROOT = pl.Path(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 WATCHLIST_FIELDS = [
-    "name",
-    "email_addresses",
-    "products",
+    "email_address",
+    "product_description",
+    "stock_code",
 ]
 EMAIL_PATTERN = re.compile(r"[^@]+@[^@]+\.[^@]+")
 PRICE_PATTERN = re.compile(r"\d+\.\d\d")
@@ -27,38 +25,6 @@ PRICE_PATTERN = re.compile(r"\d+\.\d\d")
 # ---------------------
 # Watchlist functions
 # ---------------------
-def parse_df(csv_text: str, **kwargs) -> pd.DataFrame:
-    """
-    Given a CSV text with a header, convert it to a DataFrame and
-    return the result.
-    """
-    csv = io.StringIO(csv_text)
-    return pd.read_table(csv, sep=",", **kwargs)
-
-
-def parse_watchlist(watchlist_yaml: pl.PosixPath) -> Dict:
-    """
-    Given a (decoded) YAML dictionary representing a product watchlist
-    convert the CSV text fields to DataFrame and return the resulting
-    dictionary.
-    If keys are missing from the dictionary, add them and set their values
-    to ``None`` to aid format checking in :func:`check_watchlist`.
-    """
-    w = {}
-
-    # Set all missing keys to None
-    for key in WATCHLIST_FIELDS:
-        if key in watchlist_yaml:
-            w[key] = watchlist_yaml[key]
-        else:
-            w[key] = None
-
-    if w["products"] is not None:
-        w["products"] = parse_df(w["products"], dtype={"stock_code": str})
-
-    return w
-
-
 def valid_email(x: str):
     """
     Return ``True`` if ``x`` is a valid email address;
@@ -70,24 +36,30 @@ def valid_email(x: str):
         return False
 
 
-def check_watchlist(watchlist: Dict):
+def check_watchlist(watchlist: pd.DataFrame) -> pd.DataFrame:
     """
     Raise an error if the given watchlist (dictionary) is invalid.
     """
     w = watchlist
-    if not isinstance(w["name"], str) or not len(w["name"]):
-        raise ValueError("Name must be a nonempty string")
+    if not set(WATCHLIST_FIELDS) <= set(w.columns):
+        raise ValueError(f"Watchlist must contain the columns {WATCHLIST_FIELDS}")
 
-    for e in w["email_addresses"]:
-        if not valid_email(e):
-            raise ValueError("Invalid email address", e)
+    for col in WATCHLIST_FIELDS:
+        if not w[col].dropna().nunique():
+            raise ValueError(f"Must include at least one value for {col}")
+    
+    f = w.filter(["product_description", "stock_code"]).dropna(how="all")
+    for col in f.columns:
+        if f[col].isna().sum():
+            raise ValueError(f"Column {col} must contain blanks")
+    
+    return watchlist
 
-    p = w["products"]
-    if p is None:
-        raise ValueError("Products must be given")
-    if not set(["description", "stock_code"]) <= set(p.columns):
-        raise ValueError('Products must have "description" and "stock_code" fields')
-
+def convert_google_sheet_url(url: str) -> str:
+    """
+    Given a Google Sheets URL, convert it to a CSV download URL.
+    """
+    return "/".join(url.split("/")[:-1]) + "/export?format=csv"
 
 def read_watchlist(path: pl.PosixPath) -> Dict:
     """
@@ -104,20 +76,21 @@ def read_watchlist(path: pl.PosixPath) -> Dict:
             bagels bro,285453
 
     """
-    # Read
-    path = pl.Path(path)
-    with path.open("r") as src:
-        watchlist_yaml = yaml.safe_load(src)
+    # If given a Google Sheet path, convert it to a CSV download path
+    if str(path).startswith("https://docs.google.com/spreadsheets/d/"):
+        path = convert_google_sheet_url(str(path))
 
-    # Parse
-    watchlist = parse_watchlist(watchlist_yaml)
+    # Read and check watchlist
+    w = (
+        pd.read_csv(path, dtype={"stock_code": str})
+        .pipe(check_watchlist)
+    )
 
-    # Check
-    check_watchlist(watchlist)
-
-    # Create
-    return watchlist
-
+    # Dictify
+    return {
+        "email_addresses": w.email_address.dropna().unique().tolist(),
+        "products": w.filter(["product_description", "stock_code"]).dropna(),
+    }
 
 # -------------------------
 # Countdown API functions
