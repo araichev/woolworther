@@ -6,23 +6,23 @@ import requests
 import responses
 import pandas as pd
 
-from .context import countdowner, DATA_DIR, BODY
+from .context import countdowner, BODY
 from countdowner import *
+
 
 def test_convert_google_sheet_url():
     url = "https://docs.google.com/spreadsheets/d/DOCID/edit?usp=sharing"
     expect = "https://docs.google.com/spreadsheets/d/DOCID/export?format=csv"
     assert convert_google_sheet_url(url) == expect
 
+
 def test_read_watchlist():
-    w = read_watchlist(DATA_DIR / "watchlist.csv")
-    assert isinstance(w, dict)
-    expect_keys = {"email_addresses", "products"}
-    assert set(w.keys()) == expect_keys
-    assert isinstance(w["products"], pd.DataFrame)
+    stock_codes = read_watchlist(DATA_DIR / "watchlist.csv")
+    assert isinstance(stock_codes, list)
 
     with pytest.raises(ValueError):
         read_watchlist(DATA_DIR / "bad_watchlist.csv")
+
 
 @responses.activate
 def test_get_product():
@@ -118,20 +118,26 @@ def test_run_pipeline():
 
     w_path = DATA_DIR / "watchlist.csv"
     # Test without writing to file
-    f = run_pipeline(w_path, sales_only=False)
+    f = run_pipeline(
+        w_path, recipients=["brainbummer@mailinator.com"], sales_only=False
+    )
     # Should be a DataFrame
     assert isinstance(f, pd.DataFrame)
     # File should contain all the products in the watchlist
-    w = read_watchlist(w_path)
-    assert set(w["products"].stock_code) == set(f.stock_code)
+    stock_codes = read_watchlist(w_path)
+    assert set(stock_codes) == set(f.stock_code)
 
     # Test with writing to file
     with tempfile.NamedTemporaryFile() as tmp:
-        run_pipeline(w_path, out_path=tmp.name, sales_only=False)
+        run_pipeline(
+            w_path,
+            recipients=["brainbummer@mailinator.com"],
+            out_path=tmp.name,
+            sales_only=False,
+        )
         # File should be a CSV
         f = pd.read_csv(tmp, dtype={"stock_code": str})
         assert isinstance(f, pd.DataFrame)
         # File should contain all the products in the watchlist
-        w = read_watchlist(w_path)
-        print(f)
-        assert set(w["products"].stock_code) == set(f.stock_code)
+        stock_codes = read_watchlist(w_path)
+        assert set(stock_codes) == set(f.stock_code)

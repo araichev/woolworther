@@ -2,58 +2,18 @@ from typing import List, Dict, Optional
 import datetime as dt
 import pathlib as pl
 import os
-import io
 import re
 
-import yaml
 import requests
 import titlecase as tc
 import pandas as pd
 import yagmail
 
 
-ROOT = pl.Path(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-WATCHLIST_FIELDS = [
-    "email_address",
-    "product_description",
-    "stock_code",
-]
-EMAIL_PATTERN = re.compile(r"[^@]+@[^@]+\.[^@]+")
+BASE_DIR = pl.Path(os.path.dirname(os.path.abspath(__file__)))
+DATA_DIR = BASE_DIR / "data"
 PRICE_PATTERN = re.compile(r"\d+\.\d\d")
 
-
-# ---------------------
-# Watchlist functions
-# ---------------------
-def valid_email(x: str):
-    """
-    Return ``True`` if ``x`` is a valid email address;
-    otherwise return ``False``.
-    """
-    if isinstance(x, str) and re.match(EMAIL_PATTERN, x):
-        return True
-    else:
-        return False
-
-
-def check_watchlist(watchlist: pd.DataFrame) -> pd.DataFrame:
-    """
-    Raise an error if the given watchlist (dictionary) is invalid.
-    """
-    w = watchlist
-    if not set(WATCHLIST_FIELDS) <= set(w.columns):
-        raise ValueError(f"Watchlist must contain the columns {WATCHLIST_FIELDS}")
-
-    for col in WATCHLIST_FIELDS:
-        if not w[col].dropna().nunique():
-            raise ValueError(f"Must include at least one value for {col}")
-    
-    f = w.filter(["product_description", "stock_code"]).dropna(how="all")
-    for col in f.columns:
-        if f[col].isna().sum():
-            raise ValueError(f"Column {col} must contain blanks")
-    
-    return watchlist
 
 def convert_google_sheet_url(url: str) -> str:
     """
@@ -61,40 +21,40 @@ def convert_google_sheet_url(url: str) -> str:
     """
     return "/".join(url.split("/")[:-1]) + "/export?format=csv"
 
-def read_watchlist(path: pl.PosixPath) -> Dict:
+
+def check_watchlist(watchlist: pd.DataFrame) -> pd.DataFrame:
     """
-    Read a YAML file of watchlist data at the given path,
-    parse the file, check it, and return the resulting watchlist
-    dictionary.
-    The YAML file should have the following form::
+    Raise an error if the given watchlist (dictionary) is invalid.
+    """
+    if not "stock_code" in watchlist.columns:
+        raise ValueError(f"Watchlist must contain the column stock_code")
 
-        - name: Hello
-        - email_addresses: [a@b.com, c@d.net]
-        - products: |
-            description,stock_code
-            chips sis,267945
-            bagels bro,285453
+    if not watchlist.stock_code.dropna().nunique():
+        raise ValueError(f"Column stock_code must contain at least one value")
 
+    return watchlist
+
+
+def read_watchlist(path_or_url: str) -> List[str]:
+    """
+    Read the watchlist CSV at the given path, check it, and
+    return its list of stock codes.
+    The CSV file should have at least the column
+
+    - ``'stock_code'``: the stock code of a product
+
+    More columns are OK and will be ignored.
     """
     # If given a Google Sheet path, convert it to a CSV download path
-    if str(path).startswith("https://docs.google.com/spreadsheets/d/"):
-        path = convert_google_sheet_url(str(path))
+    if (p := str(path_or_url)).startswith("https://docs.google.com/spreadsheets/d/"):
+        path_or_url = convert_google_sheet_url(p)
 
     # Read and check watchlist
-    w = (
-        pd.read_csv(path, dtype={"stock_code": str})
-        .pipe(check_watchlist)
-    )
+    w = pd.read_csv(path_or_url, dtype={"stock_code": str}).pipe(check_watchlist)
 
-    # Dictify
-    return {
-        "email_addresses": w.email_address.dropna().unique().tolist(),
-        "products": w.filter(["product_description", "stock_code"]).dropna(),
-    }
+    return w.stock_code.to_list()
 
-# -------------------------
-# Countdown API functions
-# -------------------------
+
 def get_product(stock_code: str):
     """
     Issue a GET request to Countdown at
@@ -194,9 +154,6 @@ def collect_products(stock_codes: List[str], *, as_df: bool = True):
     return results
 
 
-# -------------------------
-# Data pipeline functions
-# -------------------------
 def filter_sales(products: pd.DataFrame) -> pd.DataFrame:
     """
     Given a DataFrame of products of the form returned by
@@ -224,7 +181,7 @@ def email(
     gmail_password: str,
     *,
     as_plaintext: bool = False,
-):
+) -> None:
     """
     Email the given product DataFrame to the given recipient email addresses
     using GMail with the given username and password.
@@ -247,6 +204,7 @@ def email(
 
 def run_pipeline(
     watchlist_path: pl.PosixPath,
+    recipients: List[str] = None,
     out_path: Optional[pl.PosixPath] = None,
     gmail_username: Optional[str] = None,
     gmail_password: Optional[str] = None,
@@ -255,25 +213,20 @@ def run_pipeline(
     sales_only: bool = False,
 ):
     """
-    Read a YAML watchlist located at ``watchlist_path``, one that :func:`read_watchlist` can read,
+    Read a CSV watchlist located at ``watchlist_path``, one that :func:`read_watchlist` can read,
     collect all the product information from Countdown, and keep only the items on sale
     if ``sales_only``.
-
     Return the resulting DataFrame.
+
     If an output path is given, then instead write the result to a CSV at that path.
 
-    If a GMail username and password are given, then additionally send an email
-    from that email address to the recipients mentioned in the watchlist
-    and with the product information.
+    If a list of recipient email addresses is given, along with a
+    GMail username and password, then additionally email the product information
+    from that GMail email address to the recipients.
     Use the function :func:`email` for this.
     """
-    # Read products
-    watchlist_path = pl.Path(watchlist_path)
-    w = read_watchlist(watchlist_path)
-
-    # Collect updates
-    codes = w["products"]["stock_code"]
-    f = collect_products(codes)
+    stock_codes = read_watchlist(watchlist_path)
+    f = collect_products(stock_codes)
 
     if sales_only:
         f = filter_sales(f)
@@ -282,10 +235,10 @@ def run_pipeline(
         subject = f"{f.shape[0]} items on your Countdown watchlist"
 
     # Filter sale items and email
-    if gmail_username is not None and gmail_password is not None:
+    if recipients and gmail_username is not None and gmail_password is not None:
         email(
             f,
-            recipients=w["email_addresses"],
+            recipients=recipients,
             subject=subject,
             gmail_username=gmail_username,
             gmail_password=gmail_password,
