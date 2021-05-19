@@ -42,6 +42,12 @@ Notes
 Changes
 ========
 
+4.1.0, 2021-05-19
+-----------------
+- Upgraded to Python 3.9.
+- Added ``stock_code`` to the output of ``filter_sales()``.
+
+
 4.0.0, 2020-12-10
 -----------------
 - Switched from YAML watchlists to CSV watchlists. Simpler.

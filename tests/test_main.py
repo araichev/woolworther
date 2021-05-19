@@ -83,16 +83,16 @@ def test_collect_products():
 
 def test_filter_sales():
     f = pd.DataFrame(
-        [["a", 1, 2, 3, 20.1]],
-        columns=["name", "size", "sale_price_($)", "normal_price_($)", "discount_(%)"],
+        [["a", 0, 1, 2, 3, 20.1]],
+        columns=["name", "stock_code", "size", "sale_price_($)", "normal_price_($)", "discount_(%)"],
     )
     g = filter_sales(f)
     assert isinstance(g, pd.DataFrame)
     assert g.to_dict() == f.to_dict()
 
     f = pd.DataFrame(
-        [["a", 1, 2, 3, 0]],
-        columns=["name", "size", "sale_price_($)", "normal_price_($)", "discount_(%)"],
+        [["a", 0, 1, 2, 3, 0]],
+        columns=["name", "stock_code", "size", "sale_price_($)", "normal_price_($)", "discount_(%)"],
     )
     g = filter_sales(f)
     assert isinstance(g, pd.DataFrame)
