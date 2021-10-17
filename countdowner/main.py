@@ -63,6 +63,7 @@ def get_product(stock_code: str):
     """
     url = f"https://shop.countdown.co.nz/api/v1/products/{stock_code}"
     headers = {
+        "user-agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 12_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/12.0 Mobile/15E148 Safari/604.1",
         "x-requested-with": "OnlineShopping.WebApp",
     }
     return requests.get(url, headers=headers)
@@ -164,11 +165,11 @@ def filter_sales(products: pd.DataFrame) -> pd.DataFrame:
         result = products.copy()
     else:
         cols = [
-            "name", 
-            "stock_code", 
-            "size", 
-            "sale_price_($)", 
-            "normal_price_($)", 
+            "name",
+            "stock_code",
+            "size",
+            "sale_price_($)",
+            "normal_price_($)",
             "discount_(%)",
         ]
         result = (

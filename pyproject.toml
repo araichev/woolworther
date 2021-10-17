@@ -1,16 +1,16 @@
 [tool.poetry]
 name = "countdowner"
-version = "4.1.0"
+version = "4.1.1"
 description = "A library to check for sales at Countdown grocery stores throughout New Zealand."
 authors = ["Alex Raichev <alex@raichev.net>"]
 license = "MIT"
 
 [tool.poetry.dependencies]
 python = "^3.8||^3.9"
-requests = "^2.23.0"
+requests = "<3"
 pandas = "<2"
 lxml = "^4.5.1"
-yagmail = "^0.14"
+yagmail = "<1"
 keyring = "^21.2.1"
 titlecase = "^1.1.1"
 

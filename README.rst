@@ -1,14 +1,11 @@
 Countdowner
 ************
-.. image:: https://travis-ci.org/araichev/countdowner.svg?branch=master
-    :target: https://travis-ci.org/araichev/countdowner
-
 A Python 3.8+ library to check for sales at Countdown grocery stores throughout New Zealand.
 
 
 Installation
 =============
-``poetry add git+https://github.com/araichev/countdowner.git``
+``poetry add git+https://gitlab.com/araichev/countdowner.git``
 
 
 Usage
@@ -41,6 +38,11 @@ Notes
 
 Changes
 ========
+
+4.1.1, 2021-10-18
+-----------------
+- Added user agent to GET request header, because requests started failing without it.
+
 
 4.1.0, 2021-05-19
 -----------------
