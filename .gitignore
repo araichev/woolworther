@@ -1,4 +1,5 @@
 .env
+.ruff_cache/
 output
 notebooks/prototyping.ipynb
 .pytest_cache/

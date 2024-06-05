@@ -39,6 +39,11 @@ Notes
 Changes
 ========
 
+4.2.0, 2024-06-??
+-----------------
+- Updated API URL.
+- Updated dependencies.
+
 4.1.2, 2021-10-18
 -----------------
 - Added a cookie to GET request header (hopefully a non-expiring one), because requests started failing on my server without it.

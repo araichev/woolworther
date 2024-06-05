@@ -203,7 +203,6 @@ def email(
     If ``as_plaintext``, then write the email body as plaintext;
     otherwise, write it as HTML.
     """
-    to = recipients
     subject = subject
     if as_plaintext:
         contents = products.to_string(index=False, float_format="%.2f")
@@ -212,7 +211,7 @@ def email(
 
     with yagmail.SMTP(gmail_username, gmail_password) as yag:
         yag.send(
-            to=to,
+            to=recipients,
             subject=subject,
             contents=contents,
         )
