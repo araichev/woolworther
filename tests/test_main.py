@@ -1,27 +1,27 @@
 import tempfile
-
+import re
 
 import pytest
 import requests
 import responses
 import pandas as pd
 
-from .context import countdowner, BODY
-from countdowner import *
+from .context import woolworther, BODY
+from woolworther import main as ww
 
 
 def test_convert_google_sheet_url():
     url = "https://docs.google.com/spreadsheets/d/DOCID/edit?usp=sharing"
     expect = "https://docs.google.com/spreadsheets/d/DOCID/export?format=csv"
-    assert convert_google_sheet_url(url) == expect
+    assert ww.convert_google_sheet_url(url) == expect
 
 
 def test_read_watchlist():
-    stock_codes = read_watchlist(DATA_DIR / "watchlist.csv")
+    stock_codes = ww.read_watchlist(ww.DATA_DIR / "watchlist.csv")
     assert isinstance(stock_codes, list)
 
     with pytest.raises(ValueError):
-        read_watchlist(DATA_DIR / "bad_watchlist.csv")
+        ww.read_watchlist(ww.DATA_DIR / "bad_watchlist.csv")
 
 
 @responses.activate
@@ -29,20 +29,20 @@ def test_get_product():
     # Create mock GET response
     responses.add(
         responses.GET,
-        "https://shop.countdown.co.nz/api/v1/products/hello",
+        ww.API_URL + "hello",
         status=200,
         body=BODY,
         content_type="application/json",
     )
 
-    r = get_product("hello")
+    r = ww.get_product("hello")
     assert isinstance(r, requests.models.Response)
 
 
 def test_parse_product():
     r = requests.models.Response()
     setattr(r, "url", "https://shop.countdown.co.nz/api/v1/products/1")
-    p = parse_product(r)
+    p = ww.parse_product(r)
     assert isinstance(p, dict)
     keys = [
         "stock_code",
@@ -65,18 +65,18 @@ def test_collect_products():
     # Create mock GET response
     responses.add(
         responses.GET,
-        re.compile("https://shop.countdown.co.nz/api/v1/products/(\\w)+"),
+        re.compile(ww.API_URL + "(\\w)+"),
         match_querystring=False,
         status=200,
         body=BODY,
         content_type="application/json",
     )
 
-    f = collect_products(["1", "260803"])
+    f = ww.collect_products(["1", "260803"])
     assert isinstance(f, pd.DataFrame)
     assert f.shape == (2, 10)
 
-    f = collect_products([])
+    f = ww.collect_products([])
     assert isinstance(f, pd.DataFrame)
     assert f.empty
 
@@ -84,22 +84,36 @@ def test_collect_products():
 def test_filter_sales():
     f = pd.DataFrame(
         [["a", 0, 1, 2, 3, 20.1]],
-        columns=["name", "stock_code", "size", "sale_price_($)", "normal_price_($)", "discount_(%)"],
+        columns=[
+            "name",
+            "stock_code",
+            "size",
+            "sale_price_($)",
+            "normal_price_($)",
+            "discount_(%)",
+        ],
     )
-    g = filter_sales(f)
+    g = ww.filter_sales(f)
     assert isinstance(g, pd.DataFrame)
     assert g.to_dict() == f.to_dict()
 
     f = pd.DataFrame(
         [["a", 0, 1, 2, 3, 0]],
-        columns=["name", "stock_code", "size", "sale_price_($)", "normal_price_($)", "discount_(%)"],
+        columns=[
+            "name",
+            "stock_code",
+            "size",
+            "sale_price_($)",
+            "normal_price_($)",
+            "discount_(%)",
+        ],
     )
-    g = filter_sales(f)
+    g = ww.filter_sales(f)
     assert isinstance(g, pd.DataFrame)
     assert g.empty
 
     f = pd.DataFrame()
-    g = filter_sales(f)
+    g = ww.filter_sales(f)
     assert isinstance(g, pd.DataFrame)
     assert g.empty
 
@@ -109,27 +123,27 @@ def test_run_pipeline():
     # Create mock GET response
     responses.add(
         responses.GET,
-        re.compile("https://shop.countdown.co.nz/api/v1/products/(\\w)+"),
+        re.compile(ww.API_URL + "(\\w)+"),
         match_querystring=False,
         status=200,
         body=BODY,
         content_type="application/json",
     )
 
-    w_path = DATA_DIR / "watchlist.csv"
+    w_path = ww.DATA_DIR / "watchlist.csv"
     # Test without writing to file
-    f = run_pipeline(
+    f = ww.run_pipeline(
         w_path, recipients=["brainbummer@mailinator.com"], sales_only=False
     )
     # Should be a DataFrame
     assert isinstance(f, pd.DataFrame)
     # File should contain all the products in the watchlist
-    stock_codes = read_watchlist(w_path)
+    stock_codes = ww.read_watchlist(w_path)
     assert set(stock_codes) == set(f.stock_code)
 
     # Test with writing to file
     with tempfile.NamedTemporaryFile() as tmp:
-        run_pipeline(
+        ww.run_pipeline(
             w_path,
             recipients=["brainbummer@mailinator.com"],
             out_path=tmp.name,
@@ -139,5 +153,5 @@ def test_run_pipeline():
         f = pd.read_csv(tmp, dtype={"stock_code": str})
         assert isinstance(f, pd.DataFrame)
         # File should contain all the products in the watchlist
-        stock_codes = read_watchlist(w_path)
+        stock_codes = ww.read_watchlist(w_path)
         assert set(stock_codes) == set(f.stock_code)

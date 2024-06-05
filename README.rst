@@ -1,11 +1,11 @@
-Countdowner
+woolworther
 ************
 A Python 3.8+ library to check for sales at Countdown grocery stores throughout New Zealand.
 
 
 Installation
 =============
-``poetry add git+https://gitlab.com/araichev/countdowner.git``
+``poetry add git+https://gitlab.com/araichev/woolworther.git``
 
 
 Usage
@@ -22,7 +22,7 @@ Here is a common workflow.
     GB chocolate,32467
     cheese,281739
 
-#. Use the ``countdowner`` library functions as in the Jupyter notebook at ``notebooks/examples.ipynb`` to get price information for your products and optionally email the results.  For emailing you will need a GMail account.
+#. Use the ``woolworther`` library functions as in the Jupyter notebook at ``notebooks/examples.ipynb`` to get price information for your products and optionally email the results.  For emailing you will need a GMail account.
 
 
 Authors
