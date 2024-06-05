@@ -1,6 +1,6 @@
-woolworther
+Woolworther
 ************
-A Python 3.8+ library to check for sales at Countdown grocery stores throughout New Zealand.
+A Python 3.8+ library to check for sales at Woolworths (formerly Countdown) grocery stores throughout New Zealand.
 
 
 Installation
@@ -13,7 +13,7 @@ Usage
 Use as a library.
 Here is a common workflow.
 
-#. Get the stock codes of the products you want to watch by searching `the Countdown site <https://shop.countdown.co.nz/>`_.  The stock code of a product is listed in the URL of its details page. For example, the stock code for the product at ``https://shop.countdown.co.nz/Shop/ProductDetails?stockcode=214684&name=colgate-360-toothbrush-medium-whole-mouth-clean`` is ``214684``.
+#. Get the stock codes of the products you want to watch by searching `the Woolworths site <https://www.woolworths.co.nz/>`_.  The stock code of a product is listed in the URL of its details page. For example, the stock code for the product at ``https://www.woolworths.co.nz/shop/productdetails?stockcode=268791&name=glad-plastic-wrap-cling`` is ``268791``.
 
 #. Put your stock codes in a CSV file with at least the column ``stock_code``. Other columns are OK and will be ignored, e.g.::
 
@@ -39,10 +39,11 @@ Notes
 Changes
 ========
 
-4.2.0, 2024-06-??
+4.2.0, 2024-06-06
 -----------------
 - Updated API URL.
 - Updated dependencies.
+- Added optional headers to emails.
 
 4.1.2, 2021-10-18
 -----------------

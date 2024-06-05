@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "woolworther"
-version = "4.1.2"
-description = "A library to check for sales at Countdown grocery stores throughout New Zealand."
+version = "4.2.0"
+description = "A library to check for sales at Woolworths grocery stores throughout New Zealand."
 authors = ["Alex Raichev <alex@raichev.net>"]
 license = "MIT"
 

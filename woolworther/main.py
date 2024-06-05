@@ -1,4 +1,3 @@
-from typing import List, Dict, Optional
 import datetime as dt
 import pathlib as pl
 import os
@@ -36,7 +35,7 @@ def check_watchlist(watchlist: pd.DataFrame) -> pd.DataFrame:
     return watchlist
 
 
-def read_watchlist(path_or_url: str) -> List[str]:
+def read_watchlist(path_or_url: str) -> list[str]:
     """
     Read the watchlist CSV at the given path, check it, and
     return its list of stock codes.
@@ -58,7 +57,7 @@ def read_watchlist(path_or_url: str) -> List[str]:
 
 def get_product(stock_code: str):
     """
-    Issue a GET request to Countdown at ``API_URL``
+    Issue a GET request to Woolworths at ``API_URL``
     with the given stock code (string), and return the response.
     """
     url = API_URL + f"{stock_code}"
@@ -78,7 +77,7 @@ def price_to_float(price_string: str) -> float:
     return float(re.search(PRICE_PATTERN, price_string).group(0))
 
 
-def parse_product(response) -> Dict:
+def parse_product(response) -> dict:
     """
     Given a response of the form output by :func:`get_product` or
     :func:`get_product_a`, parse it, and return the a dictionary
@@ -137,7 +136,7 @@ def parse_product(response) -> Dict:
     return d
 
 
-def collect_products(stock_codes: List[str], *, as_df: bool = True):
+def collect_products(stock_codes: list[str], *, as_df: bool = True):
     """
     For each item in the given list of stock codes,
     call :func:`get_product`, parse the responses,
@@ -189,10 +188,11 @@ def filter_sales(products: pd.DataFrame) -> pd.DataFrame:
 
 def email(
     products: pd.DataFrame,
-    recipients: List[str],
+    recipients: list[str],
     subject: str,
     gmail_username: str,
     gmail_password: str,
+    headers: dict|None=None,
     *,
     as_plaintext: bool = False,
 ) -> None:
@@ -214,22 +214,24 @@ def email(
             to=recipients,
             subject=subject,
             contents=contents,
+            headers=headers,
         )
 
 
 def run_pipeline(
     watchlist_path: pl.PosixPath,
-    recipients: List[str] = None,
-    out_path: Optional[pl.PosixPath] = None,
-    gmail_username: Optional[str] = None,
-    gmail_password: Optional[str] = None,
+    recipients: list[str] = None,
+    out_path: pl.PosixPath|None = None,
+    gmail_username: str|None = None,
+    gmail_password: str|None = None,
+    headers: dict|None = None,
     *,
     as_plaintext: bool = False,
     sales_only: bool = False,
 ):
     """
     Read a CSV watchlist located at ``watchlist_path``, one that :func:`read_watchlist` can read,
-    collect all the product information from Countdown, and keep only the items on sale
+    collect all the product information from Woolworths, and keep only the items on sale
     if ``sales_only``.
     Return the resulting DataFrame.
 
@@ -245,9 +247,9 @@ def run_pipeline(
 
     if sales_only:
         f = filter_sales(f)
-        subject = f"{f.shape[0]} sales on your Countdown watchlist"
+        subject = f"{f.shape[0]} sales on your Woolworths watchlist"
     else:
-        subject = f"{f.shape[0]} items on your Countdown watchlist"
+        subject = f"{f.shape[0]} items on your Woolworths watchlist"
 
     # Filter sale items and email
     if recipients and gmail_username is not None and gmail_password is not None:
@@ -258,6 +260,7 @@ def run_pipeline(
             gmail_username=gmail_username,
             gmail_password=gmail_password,
             as_plaintext=as_plaintext,
+            headers=headers,
         )
 
     # Output product updates
