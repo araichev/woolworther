@@ -5,7 +5,7 @@ import json
 
 sys.path.insert(0, os.path.abspath(".."))
 
-import countdowner
+import woolworther
 
 # Body for mock responses
 BODY = json.dumps(

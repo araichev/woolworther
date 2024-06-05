@@ -1,11 +1,11 @@
-Countdowner
+Woolworther
 ************
-A Python 3.8+ library to check for sales at Countdown grocery stores throughout New Zealand.
+A Python 3.8+ library to check for sales at Woolworths (formerly Countdown) grocery stores throughout New Zealand.
 
 
 Installation
 =============
-``poetry add git+https://gitlab.com/araichev/countdowner.git``
+``poetry add git+https://gitlab.com/araichev/woolworther.git``
 
 
 Usage
@@ -13,7 +13,7 @@ Usage
 Use as a library.
 Here is a common workflow.
 
-#. Get the stock codes of the products you want to watch by searching `the Countdown site <https://shop.countdown.co.nz/>`_.  The stock code of a product is listed in the URL of its details page. For example, the stock code for the product at ``https://shop.countdown.co.nz/Shop/ProductDetails?stockcode=214684&name=colgate-360-toothbrush-medium-whole-mouth-clean`` is ``214684``.
+#. Get the stock codes of the products you want to watch by searching `the Woolworths site <https://www.woolworths.co.nz/>`_.  The stock code of a product is listed in the URL of its details page. For example, the stock code for the product at ``https://www.woolworths.co.nz/shop/productdetails?stockcode=268791&name=glad-plastic-wrap-cling`` is ``268791``.
 
 #. Put your stock codes in a CSV file with at least the column ``stock_code``. Other columns are OK and will be ignored, e.g.::
 
@@ -22,7 +22,7 @@ Here is a common workflow.
     GB chocolate,32467
     cheese,281739
 
-#. Use the ``countdowner`` library functions as in the Jupyter notebook at ``notebooks/examples.ipynb`` to get price information for your products and optionally email the results.  For emailing you will need a GMail account.
+#. Use the ``woolworther`` library functions as in the Jupyter notebook at ``notebooks/examples.ipynb`` to get price information for your products and optionally email the results.  For emailing you will need a GMail account.
 
 
 Authors
@@ -38,6 +38,12 @@ Notes
 
 Changes
 ========
+
+4.2.0, 2024-06-06
+-----------------
+- Updated API URL.
+- Updated dependencies.
+- Added optional headers to emails.
 
 4.1.2, 2021-10-18
 -----------------
