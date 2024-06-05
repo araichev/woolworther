@@ -192,7 +192,7 @@ def email(
     subject: str,
     gmail_username: str,
     gmail_password: str,
-    headers: dict|None=None,
+    headers: dict | None = None,
     *,
     as_plaintext: bool = False,
 ) -> None:
@@ -221,10 +221,10 @@ def email(
 def run_pipeline(
     watchlist_path: pl.PosixPath,
     recipients: list[str] = None,
-    out_path: pl.PosixPath|None = None,
-    gmail_username: str|None = None,
-    gmail_password: str|None = None,
-    headers: dict|None = None,
+    out_path: pl.PosixPath | None = None,
+    gmail_username: str | None = None,
+    gmail_password: str | None = None,
+    headers: dict | None = None,
     *,
     as_plaintext: bool = False,
     sales_only: bool = False,
