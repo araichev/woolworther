@@ -39,6 +39,10 @@ Notes
 Changes
 ========
 
+4.2.1, 2025-05-29
+-----------------
+- Switch to UV for project managment.
+
 4.2.0, 2024-06-06
 -----------------
 - Updated API URL.
