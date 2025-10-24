@@ -1,13 +1,12 @@
 import datetime as dt
-import pathlib as pl
 import os
+import pathlib as pl
 import re
 
+import pandas as pd
 import requests
 import titlecase as tc
-import pandas as pd
 import yagmail
-
 
 BASE_DIR = pl.Path(os.path.dirname(os.path.abspath(__file__)))
 DATA_DIR = BASE_DIR / "data"
@@ -50,8 +49,12 @@ def read_watchlist(path_or_url: str) -> list[str]:
         path_or_url = convert_google_sheet_url(p)
 
     # Read and check watchlist
-    w = pd.read_csv(path_or_url, dtype={"stock_code": str}).pipe(check_watchlist)
-
+    w = (
+        pd.read_csv(path_or_url)
+        .rename(columns=lambda x: x.lower().strip().replace(" ", "_"))
+        .pipe(check_watchlist)
+        .assign(stock_code=lambda x: x["stock_code"].astype(str))
+    )
     return w.stock_code.to_list()
 
 

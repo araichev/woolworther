@@ -1,11 +1,11 @@
 Woolworther
 ************
-A Python 3.8+ library to check for sales at Woolworths (formerly Countdown) grocery stores throughout New Zealand.
+A Python 3.12+ library to check for sales at Woolworths (formerly Countdown) grocery stores throughout New Zealand.
 
 
 Installation
 =============
-``poetry add git+https://gitlab.com/araichev/woolworther.git``
+``uv add git+https://gitlab.com/araichev/woolworther.git``
 
 
 Usage
@@ -38,6 +38,10 @@ Notes
 
 Changes
 ========
+
+4.2.2, 2025-10-24
+-----------------
+- Improved column name parsing when reading watchlist.
 
 4.2.1, 2025-05-29
 -----------------
